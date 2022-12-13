@@ -27,7 +27,7 @@ def plot(x: np.ndarray, y: np.ndarray, theta: np.ndarray):
     # shape test
     try:
         x = x.reshape(x.shape[0], 1)
-        y = y.reshape(x.shape[0], 1)
+        y = y.reshape(y.shape[0], 1)
         theta = theta.reshape(2, 1)
     except ValueError:
         print('Error: wrong shape on parameter(s)')
@@ -36,12 +36,11 @@ def plot(x: np.ndarray, y: np.ndarray, theta: np.ndarray):
     ones_column = np.full((x.shape[0], 1), 1.)
     data = np.hstack((ones_column, x))
     prediction = data.dot(theta)
-    prediction = np.hstack((x, prediction))
 
     # plot
     plt.figure()
     plt.scatter(x, y, marker='o')
-    plt.plot(prediction[:, 0], prediction[:, 1], color='red')
+    plt.plot(x, prediction, color='red')
     plt.show()
 
 

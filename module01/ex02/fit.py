@@ -35,8 +35,8 @@ def fit_(x: np.ndarray, y: np.ndarray, theta: np.ndarray, alpha: float,
         return None
     # shape test
     try:
-        x = x.reshape(-1, 1)
-        y = y.reshape(-1, 1)
+        x = x.reshape((-1, 1))
+        y = y.reshape((-1, 1))
         theta = theta.reshape(2, 1)
     except ValueError:
         print('Error: wrong shape on parameter(s)')

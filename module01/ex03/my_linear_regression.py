@@ -15,37 +15,6 @@ class MyLinearRegression():
         self.max_iter = max_iter
         self.thetas = thetas
 
-    def fit_(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
-        """
-        Description:
-        Fits the model to the training dataset contained in x and y.
-        Args:
-            x: has to be a numpy.ndarray, a vector of dimension m * 1:
-                (number of training examples, 1).
-            y: has to be a numpy.ndarray, a vector of dimension m * 1:
-                (number of training examples, 1).
-        Returns:
-            new_theta: numpy.ndarray, a vector of dimension 2 * 1.
-            None if there is a matching dimension problem.
-        Raises:
-            This function should not raise any Exception.
-        """
-        try:
-            # 0. add intercept
-            ones_column = np.full((x.shape[0], 1), 1.)
-            x_matrix = np.hstack((ones_column, x))
-            # 1. loop
-            for _ in range(self.max_iter):
-                # 2. calculate the grandient for current thetas
-                gradient = (x_matrix.T.dot(x_matrix.dot(self.thetas) - y)
-                            / x.shape[0])
-                # 3. calculate and assign the new thetas
-                self.thetas[0][0] -= self.alpha * gradient[0][0]
-                self.thetas[1][0] -= self.alpha * gradient[1][0]
-            return self.thetas
-        except (ValueError, TypeError):
-            return None
-
     def predict_(self, x: np.ndarray) -> np.ndarray:
         """
         Computes the vector of prediction y_hat from two non-empty numpy.array.
@@ -60,12 +29,15 @@ class MyLinearRegression():
             This function should not raise any Exceptions.
         """
         try:
+            # shapes
+            x = x.reshape((-1, 1))
             # 0. add intercept
             ones_column = np.full((x.shape[0], 1), 1.)
             x_matrix = np.hstack((ones_column, x))
             # 1. dot product with thetas
             return x_matrix.dot(self.thetas)
-        except (ValueError, TypeError):
+        except (ValueError, TypeError) as exc:
+            print(exc)
             return None
 
     def loss_elem_(self, y, y_hat):
@@ -85,6 +57,10 @@ class MyLinearRegression():
             This function should not raise any Exception.
         """
         try:
+            # shapes
+            y = y.reshape((-1, 1))
+            y_hat = y_hat.reshape((-1, 1))
+            # calculation
             return (y_hat - y) ** 2
         except (ValueError, TypeError):
             return None
@@ -105,11 +81,48 @@ class MyLinearRegression():
             This function should not raise any Exceptions.
         """
         try:
+            # shapes
+            y = y.reshape((-1, 1))
+            y_hat = y_hat.reshape((-1, 1))
+            # calculation
             return float((((y_hat - y).T.dot(y_hat - y))
                          / (2 * y.shape[0]))[0][0])
         except (ValueError, TypeError):
             return None
 
+    def fit_(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
+        """
+        Description:
+        Fits the model to the training dataset contained in x and y.
+        Args:
+            x: has to be a numpy.ndarray, a vector of dimension m * 1:
+                (number of training examples, 1).
+            y: has to be a numpy.ndarray, a vector of dimension m * 1:
+                (number of training examples, 1).
+        Returns:
+            new_theta: numpy.ndarray, a vector of dimension 2 * 1.
+            None if there is a matching dimension problem.
+        Raises:
+            This function should not raise any Exception.
+        """
+        try:
+            # shapes
+            x = x.reshape((-1, 1))
+            y = y.reshape((-1, 1))
+            # 0. add intercept
+            ones_column = np.full((x.shape[0], 1), 1.)
+            x_matrix = np.hstack((ones_column, x))
+            # 1. loop
+            for _ in range(self.max_iter):
+                # 2. calculate the grandient for current thetas
+                gradient = (x_matrix.T.dot(x_matrix.dot(self.thetas) - y)
+                            / x.shape[0])
+                # 3. calculate and assign the new thetas
+                self.thetas[0][0] -= self.alpha * gradient[0][0]
+                self.thetas[1][0] -= self.alpha * gradient[1][0]
+            return self.thetas
+        except (ValueError, TypeError):
+            return None
 
 if __name__ == '__main__':
 

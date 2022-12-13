@@ -2,7 +2,7 @@
 import numpy as np
 
 
-def loss_(y: np.ndarray, y_hat: np.ndarray):
+def loss_(y: np.ndarray, y_hat: np.ndarray) -> float:
     """
     Computes the half mean squared error of two non-empty numpy.array, without
     any for loop.

@@ -48,7 +48,7 @@ def predict_(x: np.ndarray, theta: np.ndarray) -> np.ndarray:
     try:
         x = x.reshape(x.shape[0], 1)
         theta = theta.reshape(2, 1)
-    except:
+    except ValueError:
         print('Error: wrong shape on parameter(s)')
         return None
     # creation of the prediction matrix
@@ -60,7 +60,7 @@ if __name__ == "__main__":
     x = np.arange(1,6)
 
     # Example 1:
-    theta1 = np.array([[5], [0]])
+    theta1 = np.array([[5], [0], [5]])
     assert(predict_(x, theta1).all() == np.array([[5.],
                                                   [5.],
                                                   [5.],
