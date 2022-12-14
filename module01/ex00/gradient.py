@@ -40,7 +40,7 @@ def simple_gradient(x: np.ndarray, y: np.ndarray, theta: np.ndarray) -> np.ndarr
         print('Error: wrong shape on parameter(s)')
         return None
     # calculation of the gradient vector
-    ones_column = np.full((x.shape[0], 1), 1.)
+    ones_column = np.ones((x.shape[0], 1))
     x_matrix = np.hstack((ones_column, x))
     grad_0 = np.sum(x_matrix.dot(theta) - y) / x.shape[0]
     grad_1 = np.sum((x_matrix.dot(theta) - y) * x) / x.shape[0]

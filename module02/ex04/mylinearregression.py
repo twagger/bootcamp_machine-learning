@@ -1,4 +1,4 @@
-"""My linear regression module"""
+"""My Linear Regression Module"""
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -14,13 +14,16 @@ class MyLinearRegression():
         """Constructor"""
         self.alpha = alpha
         self.max_iter = max_iter
-        self.thetas = thetas
+        try:
+            self.thetas = np.array(thetas).reshape((-1, 1))
+        except (ValueError, TypeError) as exc:
+            print(exc)
 
     def predict_(self, x: np.ndarray) -> np.ndarray:
         """
         Computes the vector of prediction y_hat from two non-empty numpy.array.
         Args:
-            x: has to be an numpy.array, a vector of dimension m * 1.
+            x: has to be an numpy.array, a vector of dimension m * n.
         Returns:
             y_hat as a numpy.array, a vector of dimension m * 1.
             None if x and/or theta are not numpy.array.
@@ -30,13 +33,10 @@ class MyLinearRegression():
             This function should not raise any Exceptions.
         """
         try:
-            # shapes
-            x = x.reshape((-1, 1))
             # 0. add intercept
-            ones_column = np.ones((x.shape[0], 1))
-            x_matrix = np.hstack((ones_column, x))
+            x_prime = np.hstack((np.ones((x.shape[0], 1)), x))
             # 1. dot product with thetas
-            return x_matrix.dot(self.thetas)
+            return x_prime.dot(self.thetas)
         except (ValueError, TypeError) as exc:
             print(exc)
             return None
@@ -121,103 +121,97 @@ class MyLinearRegression():
         Description:
         Fits the model to the training dataset contained in x and y.
         Args:
-            x: has to be a numpy.ndarray, a vector of dimension m * 1:
+            x: has to be a numpy.ndarray, a vector of dimension m * n:
                 (number of training examples, 1).
             y: has to be a numpy.ndarray, a vector of dimension m * 1:
                 (number of training examples, 1).
         Returns:
-            new_theta: numpy.ndarray, a vector of dimension 2 * 1.
+            new_theta: numpy.ndarray, a vector of dimension (n + 1) * 1.
             None if there is a matching dimension problem.
         Raises:
             This function should not raise any Exception.
         """
         try:
-            # shapes
-            x = x.reshape((-1, 1))
-            y = y.reshape((-1, 1))
-            # 0. add intercept
-            ones_column = np.ones((x.shape[0], 1))
-            x_matrix = np.hstack((ones_column, x))
-            # 1. loop
+            # shape test
+            if (x.shape[0] != y.shape[0] or y.shape[1] != 1):
+                print('Error: wrong shape on parameter(s)')
+                return None
+            # calculation of the gradient vector
+            # 1. X to X'
+            x_prime = np.hstack((np.ones((x.shape[0], 1)), x))
+            # 2. loop
             for _ in range(self.max_iter):
-                # 2. calculate the gradient for current thetas
-                gradient = (x_matrix.T.dot(x_matrix.dot(self.thetas) - y)
+                # 3. calculate the grandient for current thetas
+                gradient = (x_prime.T.dot(x_prime.dot(self.thetas) - y)
                             / x.shape[0])
-                # 3. calculate and assign the new thetas
-                self.thetas[0][0] -= self.alpha * gradient[0][0]
-                self.thetas[1][0] -= self.alpha * gradient[1][0]
+                # 4. calculate and assign the new thetas
+                self.thetas -= self.alpha * gradient
             return self.thetas
-        except (ValueError, TypeError):
+        except (ValueError, TypeError) as exc:
+            print(exc)
             return None
 
-if __name__ == '__main__':
 
-    x = np.array([[12.4956442],
-                  [21.5007972],
-                  [31.5527382],
-                  [48.9145838],
-                  [57.5088733]])
+if __name__ == "__main__":
 
-    y = np.array([[37.4013816],
-                  [36.1473236],
-                  [45.7655287],
-                  [46.6793434],
-                  [59.5585554]])
+    X = np.array([[1., 1., 2., 3.],
+                  [5., 8., 13., 21.],
+                  [34., 55., 89., 144.]])
 
-    lr1 = MyLinearRegression(np.array([[2], [0.7]]))
+    Y = np.array([[23.],
+                  [48.],
+                  [218.]])
 
-    # Example 0.0:
-    y_hat = lr1.predict_(x)
-    print(f'{y_hat}\n')
+    mylr = MyLinearRegression([[1.], [1.], [1.], [1.], [1]])
+
+    # Example 0:
+    y_hat = mylr.predict_(X)
+    print(y_hat)
     # Output:
-    # array([[10.74695094],
-    #        [17.05055804],
-    #        [24.08691674],
-    #        [36.24020866],
-    #        [42.25621131]])
+    # array([[8.],
+    #        [48.],
+    #        [323.]])
 
-    # Example 0.1:
-    print(f'{lr1.loss_elem_(y, y_hat)}\n')
+    # Example 1:
+    print(mylr.loss_elem_(Y, y_hat))
     # Output:
-    # array([[710.45867381],
-    #        [364.68645485],
-    #        [469.96221651],
-    #        [108.97553412],
-    #        [299.37111101]])
+    # array([[225.],
+    #        [0.],
+    #        [11025.]])
 
-    # Example 0.2:
-    print(f'{lr1.loss_(y, y_hat)}\n')
+    # Example 2:
+    print(mylr.loss_(Y, y_hat))
     # Output:
-    # 195.34539903032385
+    # 1875.0
 
-    # Example 1.0:
-    lr2 = MyLinearRegression(np.array([[1.0], [1.0]]), 5e-8, 1500000)
-    lr2.fit_(x, y)
-    print(f'{lr2.thetas}\n')
+    # Example 3:
+    mylr.alpha = 1.6e-4
+    mylr.max_iter = 200000
+    mylr.fit_(X, Y)
+    print(mylr.thetas)
     # Output:
-    # array([[1.40709365],
-    #        [1.1150909 ]])
+    # array([[18.188..],
+    #        [2.767..],
+    #        [-0.374..],
+    #        [1.392..],
+    #        [0.017..]])
 
-    # Example 1.1:
-    y_hat = lr2.predict_(x)
-    print(f'{y_hat}\n')
+    # Example 4:
+    y_hat = mylr.predict_(X)
+    print(y_hat)
     # Output:
-    # array([[15.3408728 ],
-    #        [25.38243697],
-    #        [36.59126492],
-    #        [55.95130097],
-    #        [65.53471499]])
+    # array([[23.417..],
+    #        [47.489..],
+    #        [218.065...]])
 
-    # Example 1.2:
-    print(f'{lr2.loss_elem_(y, y_hat)}\n')
+    # Example 5:
+    print(mylr.loss_elem_(Y, y_hat))
     # Output:
-    # array([[486.66604863],
-    #        [115.88278416],
-    #        [ 84.16711596],
-    #        [ 85.96919719],
-    #        [ 35.71448348]])
+    # array([[0.174..],
+    #        [0.260..],
+    #        [0.004..]])
 
-    # Example 1.3:
-    print(f'{lr2.loss_(y, y_hat)}')
+    # Example 6:
+    print(mylr.loss_(Y, y_hat))
     # Output:
-    # 80.83996294128525
+    # 0.0732..

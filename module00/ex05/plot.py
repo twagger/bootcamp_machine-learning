@@ -33,7 +33,7 @@ def plot(x: np.ndarray, y: np.ndarray, theta: np.ndarray):
         print('Error: wrong shape on parameter(s)')
         return None
     # make prediction
-    ones_column = np.full((x.shape[0], 1), 1.)
+    ones_column = np.ones((x.shape[0], 1))
     data = np.hstack((ones_column, x))
     prediction = data.dot(theta)
 

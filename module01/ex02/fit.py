@@ -1,4 +1,4 @@
-"""Plot module"""
+"""Fit module"""
 import numpy as np
 
 
@@ -46,7 +46,7 @@ def fit_(x: np.ndarray, y: np.ndarray, theta: np.ndarray, alpha: float,
         return None
     # calculation of the gradient vecto
     # 1. x to matrix
-    ones_column = np.full((x.shape[0], 1), 1.)
+    ones_column = np.ones((x.shape[0], 1))
     x_matrix = np.hstack((ones_column, x))
     # 2. loop
     for _ in range(max_iter):

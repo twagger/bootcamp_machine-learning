@@ -19,7 +19,7 @@ def add_intercept(x: np.ndarray) -> np.ndarray:
         print(f'Error: x has to be a numpy.array of dimension m * n')
         return None
     # computation
-    ones_column = np.full((x.shape[0], 1), 1.)
+    ones_column = np.ones((x.shape[0], 1))
     return np.hstack((ones_column,
                       x.reshape(x.shape[0], 1 if x.ndim == 1 else x.shape[1])))
 
