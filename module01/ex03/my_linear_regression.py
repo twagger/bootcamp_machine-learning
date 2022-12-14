@@ -1,5 +1,6 @@
 """My linear regression module"""
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 class MyLinearRegression():
@@ -90,6 +91,31 @@ class MyLinearRegression():
         except (ValueError, TypeError):
             return None
 
+    def mse_(self, y: np.ndarray, y_hat: np.ndarray) -> float:
+        """
+        Computes the mean squared error of two non-empty numpy.array,
+        without any for loop.
+        The two arrays must have the same dimensions.
+        Args:
+            y: has to be an numpy.array, a vector.
+            y_hat: has to be an numpy.array, a vector.
+        Returns:
+            The half mean squared error of the two vectors as a float.
+            None if y or y_hat are empty numpy.array.
+            None if y and y_hat does not share the same dimensions.
+        Raises:
+            This function should not raise any Exceptions.
+        """
+        try:
+            # shapes
+            y = y.reshape((-1, 1))
+            y_hat = y_hat.reshape((-1, 1))
+            # calculation
+            return float((((y_hat - y).T.dot(y_hat - y))
+                         / (y.shape[0]))[0][0])
+        except (ValueError, TypeError):
+            return None
+
     def fit_(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
         """
         Description:
@@ -114,7 +140,7 @@ class MyLinearRegression():
             x_matrix = np.hstack((ones_column, x))
             # 1. loop
             for _ in range(self.max_iter):
-                # 2. calculate the grandient for current thetas
+                # 2. calculate the gradient for current thetas
                 gradient = (x_matrix.T.dot(x_matrix.dot(self.thetas) - y)
                             / x.shape[0])
                 # 3. calculate and assign the new thetas
