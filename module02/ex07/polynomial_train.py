@@ -57,6 +57,10 @@ if __name__ == "__main__":
 
     # Trains six separate Linear Regression models with polynomial hypothesis
     # with degrees ranging from 1 to 6
+    mse_data = []
+    thetas = []
+    alphas = []
+    max_iters = []
     for i in range(6):
         
         # init params
@@ -85,15 +89,43 @@ if __name__ == "__main__":
         my_lr.fit_(x_, Y)
         # predict
         y_hat = my_lr.predict_(x_)
-        # evaluate mse
-        mse = my_lr.mse_(Y, y_hat)
-        print(mse)
         # Evaluates and prints evaluation score (MSE) of each of the six models
+        mse = my_lr.mse_(Y, y_hat)
+        mse_data.append(mse)
+        print(mse)
+        # saving parameters to reproduce the models for plotting
+        thetas.append(my_lr.thetas)
+        alphas.append(my_lr.alpha)
+        max_iters.append(my_lr.max_iter)
 
 
     # Plots a bar plot showing the MSE score of the models in function of the
     # polynomial degree of the hypothesis,
+    mse_plot = np.array(mse_data).reshape((-1,1))
+    mse_plot = np.hstack((np.arange(1,7).reshape(-1,1), mse_plot))
+    plt.figure()
+    plt.title('MSE score of the models / polynomial degree of the hypothesis')
+    plt.bar(mse_plot[:, 0], mse_plot[:, 1])
+    plt.xlabel('Polynomial degree of the hypothesis')
+    plt.ylabel('MSE score')
+    plt.show()
 
     # Plots the 6 models and the data points on the same figure.
     # Use lineplot style for the models and scaterplot for the data points.
     # Add more prediction points to have smooth curves for the models.
+    plt.figure()
+    plt.title('All hypothesis against training dataset')
+    plt.scatter(X, Y)
+    plt.xlabel('Micrograms')
+    plt.ylabel('Score')
+    # loop for each hypothesis
+    for i in range(6):
+        continuous_x = np.arange(1, 10.01, 0.01).reshape(-1,1)
+        x_ = add_polynomial_features(continuous_x, i + 1)
+        my_lr =  MyLR(thetas[i], alpha = alphas[i], max_iter = max_iters[i])
+        y_hat = my_lr.predict_(x_)
+        plt.plot(continuous_x, y_hat, label=f'{i + 1} polynomial degree(s)')
+        plt.ylim([0, 80])
+        plt.legend()
+    plt.show()
+
