@@ -25,7 +25,17 @@ def data_spliter(x: np.ndarray, y: np.ndarray, proportion: float) -> tuple:
         if x.shape[0] != y.shape[0] or y.shape[1] != 1:
             print('Error: wrong shape on parameter(s)')
             return None
-        # code here
+        # join x and y
+        full_set = np.hstack((x, y))
+        np.random.shuffle(full_set)
+        train_set_len = int(proportion * x.shape[0])
+        test_set_lent = x.shape[0] - train_set_len
+        x_train = full_set[:train_set_len, :-1]
+        x_test = full_set[train_set_len:, :-1]
+        y_train = full_set[:train_set_len, -1]
+        y_test = full_set[train_set_len:, -1]
+        return (x_train, x_test, y_train, y_test)
+
     except (ValueError, TypeError) as exc:
         print(exc)
         return None
@@ -37,12 +47,12 @@ if __name__ == "__main__":
     y = np.array([0, 1, 0, 1, 0]).reshape((-1, 1))
 
     # Example 1:
-    data_spliter(x1, y, 0.8)
+    print(f'ex01:\n{data_spliter(x1, y, 0.8)}\n')
     # Output:
     # (array([ 1, 59, 42, 300]), array([10]), array([0, 0, 1, 0]), array([1]))
 
     # Example 2:
-    data_spliter(x1, y, 0.5)
+    print(f'ex02:\n{data_spliter(x1, y, 0.5)}\n')
     # Output:
     # (array([59, 10]), array([ 1, 300, 42]), array([0, 1]), array([0, 0, 1]))
 
@@ -54,7 +64,7 @@ if __name__ == "__main__":
 
     y = np.array([0, 1, 0, 1, 0]).reshape((-1, 1))
     # Example 3:
-    data_spliter(x2, y, 0.8)
+    print(f'ex03:\n{data_spliter(x2, y, 0.8)}\n')
     # Output:
     # (array([[ 10, 42],
     #         [300, 59],
@@ -65,7 +75,7 @@ if __name__ == "__main__":
     # array([0]))
 
     # Example 4:
-    data_spliter(x2, y, 0.5)
+    print(f'ex04:\n{data_spliter(x2, y, 0.5)}\n')
     # Output:
     # (array([[59, 1],
     #         [10, 42]]),
