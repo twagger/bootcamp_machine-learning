@@ -23,7 +23,7 @@ def add_polynomial_features(x: np.ndarray, power: int) -> np.ndarray:
         if x.shape[1] != 1:
             print('Error: wrong shape on parameter(s)')
             return None
-        # calculation of the gradient vector
+        # calculation
         result = x
         for i in range(power - 1):
             result = np.hstack((result, x ** (2 + i)))

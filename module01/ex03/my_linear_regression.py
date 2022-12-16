@@ -136,13 +136,13 @@ class MyLinearRegression():
             x = x.reshape((-1, 1))
             y = y.reshape((-1, 1))
             # 0. add intercept
-            ones_column = np.ones((x.shape[0], 1))
-            x_matrix = np.hstack((ones_column, x))
+            m = x.shape[0]
+            x_prime = np.hstack((np.ones((x.shape[0], 1)), x))
             # 1. loop
             for _ in range(self.max_iter):
                 # 2. calculate the gradient for current thetas
-                gradient = (x_matrix.T.dot(x_matrix.dot(self.thetas) - y)
-                            / x.shape[0])
+                y_hat = self.predict_(x)
+                gradient = x_prime.T.dot(y_hat - y) / m
                 # 3. calculate and assign the new thetas
                 self.thetas[0][0] -= self.alpha * gradient[0][0]
                 self.thetas[1][0] -= self.alpha * gradient[1][0]

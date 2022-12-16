@@ -2,6 +2,26 @@
 import numpy as np
 
 
+def input_validator(func):
+    """Input validator for np arrays"""
+    def wrapper(*args, **kwargs):
+        y, x, theta, lambda_ = args
+        if (not isinstance(y, np.ndarray) or not isinstance(x, np.ndarray)
+                or not isinstance(theta, np.ndarray)):
+            print('y, x, and theta must be numpy.ndarray')
+            return None
+        if (y.shape[1] != 1 or theta.shape[1] != 1
+                or x.shape[0] != y.shape[0]
+                or theta.shape[0] != x.shape[1] + 1):
+            print('y, x, and theta must have compatible shapes')
+            return None
+        if not isinstance(lambda_, float):
+            print('lambda_ must be a float')
+            return None
+        return func(*args, **kwargs)
+    return wrapper
+
+@input_validator
 def reg_linear_grad(y: np.ndarray, x: np.ndarray, theta: np.ndarray,
                     lambda_: float) -> np.ndarray:
     """
@@ -22,27 +42,25 @@ def reg_linear_grad(y: np.ndarray, x: np.ndarray, theta: np.ndarray,
         This function should not raise any Exception.
     """
     try:
-        # shape test
-        if (x.shape[0] != y.shape[0] or y.shape[1] != 1
-                or theta.shape[0] != x.shape[1] + 1 or theta.shape[1] != 1):
-            print('Error: wrong shape on parameter(s)')
-            return None
         # computation
-        x_prime = np.hstack((np.ones((y.shape)), x))
-        result = []
-        # calculate the derivative by looping on each feature and each data
-        for j in range(x.shape[1] + 1):
-            regul = lambda_ * theta[j][0]
-            error_ = 0
-            for i in range(x.shape[0]):
-                error_ += (x_prime[i, :].dot(theta) - y[i][0]) * x_prime[i][j]
-            result.append([((error_ + regul) / x.shape[0])[0]])
-        return np.array(result)
+        m = x.shape[0]
+        x_prime = np.hstack((np.ones((x.shape[0], 1)), x))
+        grad = []
+        # calculate the gradient vector by looping on each feature and data
+        for j in range(x_prime.shape[1]):
+            derv = 0.0
+            for i in range(m):
+                y_hat_i = x_prime[i, :].dot(theta)
+                derv += (y_hat_i - y[i][0]) * x_prime[i][j]
+            regul = lambda_ * theta[j][0] if j > 0 else 0
+            grad.append((derv + regul) / m)
+        return np.array(grad)
 
     except (ValueError, TypeError) as exc:
         print(exc)
         return None
 
+@input_validator
 def vec_reg_linear_grad(y: np.ndarray, x: np.ndarray, theta: np.ndarray,
                         lambda_: float) -> np.ndarray:
     """
@@ -63,17 +81,13 @@ def vec_reg_linear_grad(y: np.ndarray, x: np.ndarray, theta: np.ndarray,
         This function should not raise any Exception.
     """
     try:
-        # shape test
-        if (x.shape[0] != y.shape[0] or y.shape[1] != 1
-                or theta.shape[0] != x.shape[1] + 1 or theta.shape[1] != 1):
-            print('Error: wrong shape on parameter(s)')
-            return None
         # computation
-        x_prime = np.hstack((np.ones((y.shape)), x))
-        theta_prime = theta
+        m = x.shape[0]
+        x_prime = np.hstack((np.ones((x.shape[0], 1)), x))
+        theta_prime = theta.copy()
         theta_prime[0][0] = 0
         y_hat = x_prime.dot(theta)
-        return (x_prime.T.dot(y_hat - y) + lambda_ * theta_prime) / x.shape[0]
+        return (x_prime.T.dot(y_hat - y) + lambda_ * theta_prime) / m
 
     except (ValueError, TypeError) as exc:
         print(exc)
@@ -112,7 +126,7 @@ if __name__ == "__main__":
     #        [-644.52142857]])
     
     # Example 1.2:
-    print(f'ex1.2:\n{vec_reg_linear_grad(y, x, theta, 1)}\n')
+    print(f'ex1.2:\n{vec_reg_linear_grad(y, x, theta, 1.0)}\n')
     # Output:
     # array([[ -60.99 ],
     #        [-195.64714286],

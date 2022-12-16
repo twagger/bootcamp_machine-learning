@@ -121,12 +121,13 @@ class MyLogisticRegression():
                 return None
             # calculation of the gradient vector
             # 1. X to X'
+            m = x.shape[0]
             x_prime = np.hstack((np.ones((x.shape[0], 1)), x))
             # 2. loop
             for _ in range(self.max_iter):
                 # 3. calculate the grandient for current thetas
                 y_hat = self.predict_(x)
-                gradient = (1 / x.shape[0]) * x_prime.T.dot(y_hat - y)
+                gradient = x_prime.T.dot(y_hat - y) / m
                 # 4. calculate and assign the new thetas
                 self.theta -= self.alpha * gradient
             return self.theta
