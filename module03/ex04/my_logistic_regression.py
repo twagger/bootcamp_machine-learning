@@ -192,15 +192,17 @@ if __name__ == "__main__":
     # setting parameters
     X = np.array(df[['col1','col2']])
     Y = np.array(df[['res']])
-    thetas = np.array([[-22.46978684], [0.18471291], [0.17968674]])
-    mylr = MyLogisticRegression(thetas, max_iter=10000000)
+    # thetas = np.array([[-25.16133334], [0.20623171], [0.2014716]])
+    thetas = np.array([[-6.74692366], [0.24194933], [0.12629922]])
+    mylr = MyLogisticRegression(thetas, alpha=4e-3 ,max_iter=10000)
 
     # Example 0:
     y_hat = mylr.predict_(X)
     print(f'firt predict:\n{y_hat}\n')
 
     # Example 1:
-    print(f'loss:\n{mylr.loss_(Y, y_hat)}\n')
+    first_loss = mylr.loss_(Y, y_hat)
+    print(f'loss:\n{first_loss}\n')
 
     # Example 2:
     mylr.fit_(X, Y)
@@ -211,9 +213,22 @@ if __name__ == "__main__":
     print(f'new prediction:\n{y_hat}\n')
 
     # Example 4:
-    print(f'new loss:\n{mylr.loss_(Y, y_hat)}\n')
+    new_loss = mylr.loss_(Y, y_hat)
+    print(f'new loss:\n{new_loss}\n')
+    print(f'{f"-{first_loss - new_loss}" if new_loss < first_loss else f"+{new_loss - first_loss}" }\n')
 
     # Do a precision percentage
     y_hat = np.array(list(map(lambda x: 0 if x < 0.5 else 1, y_hat)))
     stat = Y == y_hat
     print(stat.sum() / len(stat))
+
+    # plot
+    import matplotlib.pyplot as plt
+    plt.figure()
+    plt.subplot(1,2,1)
+    plt.scatter(np.array(df['col1']),  Y)
+    plt.scatter(np.array(df['col1']),  y_hat)
+    plt.subplot(1,2,2)
+    plt.scatter(np.array(df['col2']),  Y)
+    plt.scatter(np.array(df['col2']),  y_hat)
+    plt.show()
