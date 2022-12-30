@@ -22,7 +22,7 @@ def plot(x: np.ndarray, y: np.ndarray, theta: np.ndarray):
                 or theta.shape[0] != 2):
             print('Error: wrong shape on parameter(s)')
             return None
-        # creation of the prediction matrix
+        # creation of the prediction vector 
         x_prime = np.hstack((np.ones((x.shape[0], 1)), x))
         prediction = x_prime.dot(theta)
         # plot
