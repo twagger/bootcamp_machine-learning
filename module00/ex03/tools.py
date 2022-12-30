@@ -27,7 +27,7 @@ def add_intercept(x: np.ndarray) -> np.ndarray:
 if __name__ == "__main__":
 
     # Test 1
-    x = np.arange(1,6)
+    x = np.arange(1,6).reshape((-1, 1))
     assert(add_intercept(x).all() == np.array([[1., 1.],
                                                [1., 2.],
                                                [1., 3.],

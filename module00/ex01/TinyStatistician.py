@@ -161,13 +161,13 @@ if __name__ == "__main__":
     vector = [1, 42, 300, 10, 59]
     print(f'\033[1;35m>\033[0m {ts.quartiles(vector)}')
 
-    # variance
+    # smple variance
     print("\n\033[1;35m--variance--\033[0m")
     print("\033[33mvector = [1, 42, 300, 10, 59]\033[0m")
     vector = [1, 42, 300, 10, 59]
     print(f'\033[1;35m>\033[0m {ts.var(vector)}')
 
-    # standard deviation
+    # sample standard deviation
     print("\n\033[1;35m--standard deviation--\033[0m")
     print("\033[33mvector = [1, 42, 300, 10, 59]\033[0m")
     vector = [1, 42, 300, 10, 59]
