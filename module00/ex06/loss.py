@@ -82,16 +82,15 @@ if __name__ == "__main__":
                    [22.]]).reshape((-1, 1))
 
     # Example 1:
-    print(loss_elem_(y1, y_hat1))
-    np.testing.assert_array_equal(loss_elem_(y1, y_hat1),np.array([[0.],
-                                                                   [ 1],
-                                                                   [ 4],
-                                                                   [ 9],
-                                                                   [16]]))
+    np.testing.assert_array_equal(loss_elem_(y1, y_hat1), np.array([[0.],
+                                                                    [ 1],
+                                                                    [ 4],
+                                                                    [ 9],
+                                                                    [16]]))
 
     # Example 2:
-    assert(loss_(y1, y_hat1) == 3.0)
-    
+    assert loss_(y1, y_hat1) == 3.0
+
     # prepare test data
     x2 = np.array([0, 15, -9, 7, 12, 3, -21]).reshape(-1, 1)
     theta2 = np.array([[0.], [1.]]).reshape(-1, 1)
@@ -99,7 +98,7 @@ if __name__ == "__main__":
     y2 = np.array([2, 14, -13, 5, 12, 4, -19]).reshape(-1, 1)
 
     # Example 3:
-    assert(loss_(y2, y_hat2) == 2.142857142857143)
-    
+    assert loss_(y2, y_hat2) == 2.142857142857143
+
     # Example 4:
-    assert(loss_(y2, y2) == 0.0)
+    assert loss_(y2, y2) == 0.0
