@@ -28,14 +28,14 @@ if __name__ == "__main__":
 
     # Test 1
     x = np.arange(1,6).reshape((-1, 1))
-    assert(add_intercept(x).all() == np.array([[1., 1.],
-                                               [1., 2.],
-                                               [1., 3.],
-                                               [1., 4.],
-                                               [1., 5.]]).all())
+    np.testing.assert_array_equal(add_intercept(x), np.array([[1., 1.],
+                                                              [1., 2.],
+                                                              [1., 3.],
+                                                              [1., 4.],
+                                                              [1., 5.]]))
 
     # Test 2
     y = np.arange(1,10).reshape((3,3))
-    assert(add_intercept(y).all() == np.array([[1., 1., 2., 3.],
-                                               [1., 4., 5., 6.],
-                                               [1., 7., 8., 9.]]).all())
+    np.testing.assert_array_equal(add_intercept(y), np.array([[1., 1., 2., 3.],
+                                                              [1., 4., 5., 6.],
+                                                              [1., 7., 8., 9.]]))

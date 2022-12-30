@@ -35,32 +35,32 @@ if __name__ == "__main__":
 
     # Example 1:
     theta1 = np.array([[5], [0]]).reshape((-1, 1))
-    assert(simple_predict(x, theta1).all() == np.array([[5.],
-                                                  [5.],
-                                                  [5.],
-                                                  [5.],
-                                                  [5.]]).all())
+    np.testing.assert_array_equal(simple_predict(x, theta1), np.array([[5.],
+                                                                       [5.],
+                                                                       [5.],
+                                                                       [5.],
+                                                                       [5.]]))
 
     # Example 2:
     theta2 = np.array([[0], [1]]).reshape((-1, 1))
-    assert(simple_predict(x, theta2).all() == np.array([[1.],
-                                                  [2.],
-                                                  [3.],
-                                                  [4.],
-                                                  [5.]]).all())
+    np.testing.assert_array_equal(simple_predict(x, theta2), np.array([[1.],
+                                                                       [2.],
+                                                                       [3.],
+                                                                       [4.],
+                                                                       [5.]]))
 
     # Example 3:
     theta3 = np.array([[5], [3]]).reshape((-1, 1))
-    assert(simple_predict(x, theta3).all() == np.array([[ 8.],
-                                                  [11.],
-                                                  [14.],
-                                                  [17.],
-                                                  [20.]]).all())
+    np.testing.assert_array_equal(simple_predict(x, theta3), np.array([[ 8.],
+                                                                       [11.],
+                                                                       [14.],
+                                                                       [17.],
+                                                                       [20.]]))
 
     # Example 4:
     theta4 = np.array([[-3], [1]]).reshape((-1, 1))
-    assert(simple_predict(x, theta4).all() == np.array([[-2.],
-                                                  [-1.],
-                                                  [ 0.],
-                                                  [ 1.],
-                                                  [ 2.]]).all())
+    np.testing.assert_array_equal(simple_predict(x, theta4), np.array([[-2.],
+                                                                       [-1.],
+                                                                       [ 0.],
+                                                                       [ 1.],
+                                                                       [ 2.]]))

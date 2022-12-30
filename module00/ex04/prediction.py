@@ -2,7 +2,7 @@
 import numpy as np
 
 
-def predict_(x, theta):
+def predict_(x: np.ndarray, theta:np.ndarray) -> np.ndarray:
     """
     Computes the vector of prediction y_hat from two non-empty numpy.array.
     Args:
@@ -31,36 +31,36 @@ def predict_(x, theta):
 
 if __name__ == "__main__":
 
-    x = np.arange(1,6)
+    x = np.arange(1, 6).reshape((-1, 1))
 
     # Example 1:
-    theta1 = np.array([[5], [0]])
-    assert(predict_(x, theta1).all() == np.array([[5.],
-                                                  [5.],
-                                                  [5.],
-                                                  [5.],
-                                                  [5.]]).all())
+    theta1 = np.array([[5], [0]]).reshape((-1, 1))
+    np.testing.assert_array_equal(predict_(x, theta1), np.array([[5.],
+                                                                 [5.],
+                                                                 [5.],
+                                                                 [5.],
+                                                                 [5.]]))
 
     # Example 2:
-    theta2 = np.array([[0], [1]])
-    assert(predict_(x, theta2).all() == np.array([[1.],
-                                                  [2.],
-                                                  [3.],
-                                                  [4.],
-                                                  [5.]]).all())
+    theta2 = np.array([[0], [1]]).reshape((-1, 1))
+    np.testing.assert_array_equal(predict_(x, theta2), np.array([[1.],
+                                                                 [2.],
+                                                                 [3.],
+                                                                 [4.],
+                                                                 [5.]]))
 
     # Example 3:
-    theta3 = np.array([[5], [3]])
-    assert(predict_(x, theta3).all() == np.array([[ 8.],
-                                                  [11.],
-                                                  [14.],
-                                                  [17.],
-                                                  [20.]]).all())
+    theta3 = np.array([[5], [3]]).reshape((-1, 1))
+    np.testing.assert_array_equal(predict_(x, theta3), np.array([[ 8.],
+                                                                 [11.],
+                                                                 [14.],
+                                                                 [17.],
+                                                                 [20.]]))
 
     # Example 4:
-    theta4 = np.array([[-3], [1]])
-    assert(predict_(x, theta4).all() == np.array([[-2.],
-                                                  [-1.],
-                                                  [ 0.],
-                                                  [ 1.],
-                                                  [ 2.]]).all())
+    theta4 = np.array([[-3], [1]]).reshape((-1, 1))
+    np.testing.assert_array_equal(predict_(x, theta4), np.array([[-2.],
+                                                                 [-1.],
+                                                                 [ 0.],
+                                                                 [ 1.],
+                                                                 [ 2.]]))
