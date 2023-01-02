@@ -14,7 +14,10 @@ class MyLinearRegression():
         """Constructor"""
         self.alpha = alpha
         self.max_iter = max_iter
-        self.thetas = thetas
+        try:
+            self.thetas = np.array(thetas).reshape((-1, 1))
+        except (ValueError, TypeError) as exc:
+            print(exc)
 
     def predict_(self, x: np.ndarray) -> np.ndarray:
         """
@@ -30,18 +33,16 @@ class MyLinearRegression():
             This function should not raise any Exceptions.
         """
         try:
-            # shapes
+            # shape
             x = x.reshape((-1, 1))
-            # 0. add intercept
-            ones_column = np.ones((x.shape[0], 1))
-            x_matrix = np.hstack((ones_column, x))
-            # 1. dot product with thetas
-            return x_matrix.dot(self.thetas)
-        except (ValueError, TypeError) as exc:
+            # creation of the prediction matrix
+            x_prime = np.hstack((np.ones((x.shape[0], 1)), x))
+            return x_prime.dot(self.thetas)
+        except (TypeError, ValueError) as exc:
             print(exc)
             return None
 
-    def loss_elem_(self, y, y_hat):
+    def loss_elem_(self, y: np.ndarray, y_hat: np.ndarray) -> np.ndarray:
         """
         Description:
         Calculates all the elements (y_pred - y)^2 of the loss function.
@@ -82,12 +83,8 @@ class MyLinearRegression():
             This function should not raise any Exceptions.
         """
         try:
-            # shapes
-            y = y.reshape((-1, 1))
-            y_hat = y_hat.reshape((-1, 1))
-            # calculation
-            return float((((y_hat - y).T.dot(y_hat - y))
-                         / (2 * y.shape[0]))[0][0])
+            loss_vector = self.loss_elem_(y, y_hat)
+            return float(np.sum(loss_vector) / (2 * len(y)))
         except (ValueError, TypeError):
             return None
 
@@ -107,12 +104,8 @@ class MyLinearRegression():
             This function should not raise any Exceptions.
         """
         try:
-            # shapes
-            y = y.reshape((-1, 1))
-            y_hat = y_hat.reshape((-1, 1))
-            # calculation
-            return float((((y_hat - y).T.dot(y_hat - y))
-                         / (y.shape[0]))[0][0])
+           loss_vector = self.loss_elem_(y, y_hat)
+           return float(np.sum(loss_vector) / len(y))
         except (ValueError, TypeError):
             return None
 
@@ -168,56 +161,44 @@ if __name__ == '__main__':
 
     # Example 0.0:
     y_hat = lr1.predict_(x)
-    print(f'{y_hat}\n')
-    # Output:
-    # array([[10.74695094],
-    #        [17.05055804],
-    #        [24.08691674],
-    #        [36.24020866],
-    #        [42.25621131]])
+    np.testing.assert_allclose(y_hat, np.array([[10.74695094],
+                                                [17.05055804],
+                                                [24.08691674],
+                                                [36.24020866],
+                                                [42.25621131]]), rtol=1e-9)
 
     # Example 0.1:
-    print(f'{lr1.loss_elem_(y, y_hat)}\n')
-    # Output:
-    # array([[710.45867381],
-    #        [364.68645485],
-    #        [469.96221651],
-    #        [108.97553412],
-    #        [299.37111101]])
+    np.testing.assert_allclose(lr1.loss_elem_(y, y_hat),
+                               np.array([[710.45867381],
+                                         [364.68645485],
+                                         [469.96221651],
+                                         [108.97553412],
+                                         [299.37111101]]), rtol=1e-9)
 
-    # Example 0.2:
-    print(f'{lr1.loss_(y, y_hat)}\n')
-    # Output:
-    # 195.34539903032385
+    # Example 0.2: original test is 195.34539903032385
+    assert lr1.loss_(y, y_hat) == 195.34539903032382
 
     # Example 1.0:
     lr2 = MyLinearRegression(np.array([[1.0], [1.0]]), 5e-8, 1500000)
     lr2.fit_(x, y)
-    print(f'{lr2.thetas}\n')
-    # Output:
-    # array([[1.40709365],
-    #        [1.1150909 ]])
+    np.testing.assert_allclose(lr2.thetas, np.array([[1.40709365],
+                                                     [1.1150909 ]]), rtol=1e-8)
 
     # Example 1.1:
     y_hat = lr2.predict_(x)
-    print(f'{y_hat}\n')
-    # Output:
-    # array([[15.3408728 ],
-    #        [25.38243697],
-    #        [36.59126492],
-    #        [55.95130097],
-    #        [65.53471499]])
+    np.testing.assert_allclose(y_hat, np.array([[15.3408728 ],
+                                                [25.38243697],
+                                                [36.59126492],
+                                                [55.95130097],
+                                                [65.53471499]]), rtol=1e-9)
 
     # Example 1.2:
-    print(f'{lr2.loss_elem_(y, y_hat)}\n')
-    # Output:
-    # array([[486.66604863],
-    #        [115.88278416],
-    #        [ 84.16711596],
-    #        [ 85.96919719],
-    #        [ 35.71448348]])
+    np.testing.assert_allclose(lr2.loss_elem_(y, y_hat),
+                               np.array([[486.66604863],
+                                         [115.88278416],
+                                         [ 84.16711596],
+                                         [ 85.96919719],
+                                         [ 35.71448348]]), rtol=1e-9)
 
-    # Example 1.3:
-    print(f'{lr2.loss_(y, y_hat)}')
-    # Output:
-    # 80.83996294128525
+    # Example 1.3: original test is 80.83996294128525
+    assert lr2.loss_(y, y_hat) == 80.83996294128524
