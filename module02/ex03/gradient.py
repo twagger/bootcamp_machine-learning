@@ -2,7 +2,7 @@
 import numpy as np
 
 
-def gradient(x, y, theta):
+def gradient(x: np.ndarray, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
     """
     Computes a gradient vector from three non-empty numpy.array, without any
     for-loop.
@@ -28,9 +28,10 @@ def gradient(x, y, theta):
             print('Error: wrong shape on parameter(s)')
             return None
         # calculation of the gradient vector
-        x_prime = np.hstack((np.ones((x.shape[0], 1)), x))
-        return x_prime.T.dot(x_prime.dot(theta) - y) / x.shape[0]
-    except (ValueError, TypeError) as exc:
+        m = x.shape[0]
+        x_prime = np.hstack((np.ones((m, 1)), x))
+        return x_prime.T.dot(x_prime.dot(theta) - y) / m
+    except (ValueError, TypeError, AttributeError) as exc:
         print(exc)
         return None
 
@@ -55,7 +56,7 @@ if __name__ == "__main__":
     # array([[ -33.71428571],
     #        [ -37.35714286],
     #        [ 183.14285714],
-    #        [        -393.]])
+    #        [-393.        ]])
 
     # Example :
     theta2 = np.array([0.0, 0, 0, 0]).reshape((-1, 1))  # <-- missing `0`

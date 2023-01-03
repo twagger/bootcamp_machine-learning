@@ -24,7 +24,7 @@ def loss_(y: np.ndarray, y_hat: np.ndarray) -> float:
         # calculation
         return float((((y_hat - y).T.dot(y_hat - y))
                         / (2 * y.shape[0]))[0][0])
-    except (ValueError, TypeError):
+    except (ValueError, TypeError, AttributeError):
         return None
 
 
@@ -34,11 +34,7 @@ if __name__ == "__main__":
     Y = np.array([2, 14, -13, 5, 12, 4, -19]).reshape((-1, 1))
 
     # Example 1:
-    print(loss_(X, Y))
-    # Output:
-    # 2.142857142857143
+    assert loss_(X, Y) == 2.142857142857143
 
     # Example 2:
-    print(loss_(X, X))
-    # Output
-    # 0.0
+    assert loss_(X, X) == 0.0

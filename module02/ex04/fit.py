@@ -33,15 +33,16 @@ def fit_(x: np.ndarray, y: np.ndarray, theta: np.ndarray, alpha: float,
             return None
         # calculation of the gradient vecto
         # 1. X to X'
-        x_prime = np.hstack((np.ones((x.shape[0], 1)), x))
+        m = x.shape[0]
+        x_prime = np.hstack((np.ones((m, 1)), x))
         # 2. loop
         for _ in range(max_iter):
-            # 3. calculate the grandient for current thetas
-            gradient = x_prime.T.dot(x_prime.dot(theta) - y) / x.shape[0]
-            # 4. calculate and assign the new thetas
+            # 3. calculate the grandient vector for current thetas
+            gradient = x_prime.T.dot(x_prime.dot(theta) - y) / m
+            # 4. calculate and assign the new thetas all in once with vector
             theta -= alpha * gradient
         return theta
-    except (ValueError, TypeError) as exc:
+    except (ValueError, TypeError, AttributeError) as exc:
         print(exc)
         return None
 
@@ -49,7 +50,7 @@ def fit_(x: np.ndarray, y: np.ndarray, theta: np.ndarray, alpha: float,
 if __name__ == "__main__":
 
     import sys
-    sys.path.insert(1, '../ex00/')
+    sys.path.insert(1, '../ex01/')
     from prediction import predict_
 
     x = np.array([[0.2, 2., 20.],
