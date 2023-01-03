@@ -36,7 +36,7 @@ def simple_gradient(x: np.ndarray, y: np.ndarray,
         x_prime = np.hstack((np.ones((x.shape[0], 1)), x))
         return x_prime.T.dot(x_prime.dot(theta) - y) / x.shape[0]
 
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, AttributeError):
         print('Error: wrong shape on parameter(s)')
         return None
 

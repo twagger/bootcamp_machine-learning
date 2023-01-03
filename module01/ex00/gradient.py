@@ -33,13 +33,18 @@ def simple_gradient(x: np.ndarray, y: np.ndarray,
         if x.shape != y.shape or x.shape[1] != 1 or theta.shape != (2, 1):
             print('Error: wrong shape on parameter(s)')
             return None
-        # calculation of the gradient vector
-        x_prime = np.hstack((np.ones((x.shape[0], 1)), x))
-        grad_0 = np.sum(x_prime.dot(theta) - y) / x.shape[0]
-        grad_1 = np.sum((x_prime.dot(theta) - y) * x) / x.shape[0]
-        return np.array([grad_0, grad_1]).reshape((2, 1))
+        # calculation of the gradient vector with FOR LOOPS
+        grad_0 = 0
+        grad_1 = 0
+        m = x.shape[0]
+        x_prime = np.hstack((np.ones((m, 1)), x))
+        for i in range(m):
+            grad_0 += x_prime.dot(theta)[i] - y[i]
+        for i in range(m):
+            grad_1 += (x_prime.dot(theta)[i] - y[i]) * x[i]
+        return np.array([grad_0 / m, grad_1 / m]).reshape((2, 1))
 
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, AttributeError):
         print('Error: wrong shape on parameter(s)')
         return None
 

@@ -56,7 +56,7 @@ if __name__ == '__main__':
     for theta_0 in np.linspace(80, 100, 6):
         J_theta_0 = []
         thetas_1 = []
-        for theta_1 in np.linspace(-300, 200, 2500):
+        for theta_1 in np.linspace(-15, -3, 80):
             # create a model with the proper thetas
             mlr_temp = MyLinearRegression(np.array([theta_0, theta_1]))
             # get the loss for each value of theta_1 (theta_0 is fixed)
@@ -71,7 +71,7 @@ if __name__ == '__main__':
     plt.ylim([10, 150])
     plt.grid(visible=True)
     plt.xlabel('$θ_1$')
-    plt.ylabel('$Cost function J(θ_0,θ_1)$')
+    plt.ylabel('Cost function $J(θ_0,θ_1)$')
     plt.legend(loc='lower right')
     plt.show()
 

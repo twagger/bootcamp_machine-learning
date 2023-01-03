@@ -75,7 +75,7 @@ def fit_(x: np.ndarray, y: np.ndarray, theta: np.ndarray, alpha: float,
             theta[1][0] -= alpha * gradient[1][0]
         return theta
 
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, AttributeError):
         print('Error: wrong shape on parameter(s)')
         return None
 
