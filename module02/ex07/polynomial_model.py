@@ -24,12 +24,12 @@ def add_polynomial_features(x: np.ndarray, power: int) -> np.ndarray:
             print('Error: wrong shape on parameter(s)')
             return None
         # calculation
-        result = x
+        result = x.copy()
         for i in range(power - 1):
             result = np.hstack((result, x ** (2 + i)))
         return result
 
-    except (ValueError, TypeError) as exc:
+    except (ValueError, TypeError, AttributeError) as exc:
         print(exc)
         return None
 

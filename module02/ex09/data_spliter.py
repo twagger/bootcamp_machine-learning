@@ -23,20 +23,20 @@ def data_spliter(x: np.ndarray, y: np.ndarray, proportion: float) -> tuple:
     try:
         # shape test
         if x.shape[0] != y.shape[0] or y.shape[1] != 1:
-            print('Error: wrong shape on parameter(s)')
+            print('Something went wrong')
             return None
-        # join x and y
+        # join x and y and shuffle
         full_set = np.hstack((x, y))
         np.random.shuffle(full_set)
+        # slice the train and test sets
         train_set_len = int(proportion * x.shape[0])
-        test_set_lent = x.shape[0] - train_set_len
         x_train = full_set[:train_set_len, :-1]
         x_test = full_set[train_set_len:, :-1]
         y_train = full_set[:train_set_len, -1]
         y_test = full_set[train_set_len:, -1]
         return (x_train, x_test, y_train, y_test)
 
-    except (ValueError, TypeError) as exc:
+    except (ValueError, TypeError, AttributeError) as exc:
         print(exc)
         return None
 

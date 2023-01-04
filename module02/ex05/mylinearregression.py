@@ -1,6 +1,5 @@
 """My Linear Regression Module"""
 import numpy as np
-import matplotlib.pyplot as plt
 
 
 class MyLinearRegression():
@@ -16,7 +15,7 @@ class MyLinearRegression():
         self.max_iter = max_iter
         try:
             self.thetas = np.array(thetas).reshape((-1, 1))
-        except (ValueError, TypeError) as exc:
+        except (ValueError, TypeError, AttributeError) as exc:
             print(exc)
 
     def predict_(self, x: np.ndarray) -> np.ndarray:
@@ -33,15 +32,14 @@ class MyLinearRegression():
             This function should not raise any Exceptions.
         """
         try:
-            # 0. add intercept
-            x_prime = np.hstack((np.ones((x.shape[0], 1)), x))
-            # 1. dot product with thetas
+            m = x.shape[0]
+            x_prime = np.hstack((np.ones((m, 1)), x))
             return x_prime.dot(self.thetas)
-        except (ValueError, TypeError) as exc:
+        except (ValueError, TypeError, AttributeError) as exc:
             print(exc)
             return None
 
-    def loss_elem_(self, y, y_hat):
+    def loss_elem_(self, y: np.ndarray, y_hat: np.ndarray) -> np.ndarray:
         """
         Description:
         Calculates all the elements (y_pred - y)^2 of the loss function.
@@ -58,12 +56,10 @@ class MyLinearRegression():
             This function should not raise any Exception.
         """
         try:
-            # shapes
             y = y.reshape((-1, 1))
             y_hat = y_hat.reshape((-1, 1))
-            # calculation
             return (y_hat - y) ** 2
-        except (ValueError, TypeError):
+        except (ValueError, TypeError, AttributeError):
             return None
 
     def loss_(self, y: np.ndarray, y_hat: np.ndarray) -> float:
@@ -82,13 +78,11 @@ class MyLinearRegression():
             This function should not raise any Exceptions.
         """
         try:
-            # shapes
             y = y.reshape((-1, 1))
             y_hat = y_hat.reshape((-1, 1))
-            # calculation
-            return float((((y_hat - y).T.dot(y_hat - y))
-                         / (2 * y.shape[0]))[0][0])
-        except (ValueError, TypeError):
+            m = y.shape[0]
+            return float((((y_hat - y).T.dot(y_hat - y)) / (2 * m))[0][0])
+        except (ValueError, TypeError, AttributeError):
             return None
 
     def mse_(self, y: np.ndarray, y_hat: np.ndarray) -> float:
@@ -111,9 +105,9 @@ class MyLinearRegression():
             y = y.reshape((-1, 1))
             y_hat = y_hat.reshape((-1, 1))
             # calculation
-            return float((((y_hat - y).T.dot(y_hat - y))
-                         / (y.shape[0]))[0][0])
-        except (ValueError, TypeError):
+            m = y.shape[0]
+            return float((((y_hat - y).T.dot(y_hat - y)) / (m))[0][0])
+        except (ValueError, TypeError, AttributeError):
             return None
 
     def fit_(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
@@ -138,16 +132,16 @@ class MyLinearRegression():
                 return None
             # calculation of the gradient vector
             # 1. X to X'
-            x_prime = np.hstack((np.ones((x.shape[0], 1)), x))
+            m = x.shape[0]
+            x_prime = np.hstack((np.ones((m, 1)), x))
             # 2. loop
             for _ in range(self.max_iter):
                 # 3. calculate the grandient for current thetas
-                gradient = (x_prime.T.dot(x_prime.dot(self.thetas) - y)
-                            / x.shape[0])
+                gradient = (x_prime.T.dot(x_prime.dot(self.thetas) - y) / m)
                 # 4. calculate and assign the new thetas
                 self.thetas -= self.alpha * gradient
             return self.thetas
-        except (ValueError, TypeError) as exc:
+        except (ValueError, TypeError, AttributeError) as exc:
             print(exc)
             return None
 

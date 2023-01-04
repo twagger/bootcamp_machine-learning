@@ -45,9 +45,9 @@ if __name__ == "__main__":
 
     # imports
     import sys
-    sys.path.insert(1, '../ex06/')
+    sys.path.insert(1, '../ex07/')
     from polynomial_model import add_polynomial_features
-    sys.path.insert(1, '../ex04/')
+    sys.path.insert(1, '../ex05/')
     from mylinearregression import MyLinearRegression as MyLR
 
     # Reads and loads are_blue_pills_magics.csv dataset
@@ -61,28 +61,29 @@ if __name__ == "__main__":
     thetas = []
     alphas = []
     max_iters = []
-    for i in range(6):
-        
+    for degree in range(1, 7):
+
         # init params
-        theta = np.ones(i + 2).reshape(-1,1)
+        theta = np.ones(degree + 1).reshape(-1,1)
         alpha = 2.5e-5
         max_iter = 500000
-        if i == 3:
+        if degree == 4:
             theta = np.array([[-20.0],[ 160],[ -80],[ 10],[ -1]]).reshape(-1,1)
             alpha = 2.5e-8
             max_iter = 500000
-        if i == 4:
+        if degree == 5:
             theta = np.array([[1140.0],[ -1850],[ 1110],[ -305],[ 40],
                               [ -2]]).reshape(-1, 1)
             alpha = 2.5e-8
             max_iter = 500000
-        if i == 5:
+        if degree == 6:
             theta = np.array([[9110.0],[ -18015],[ 13400],[ -4935],[ 966],
                               [ -96.4],[ 3.86]]).reshape(-1, 1)
             alpha = 2.5e-10
             max_iter = 1000000
+
         # add polynomial data
-        x_ = add_polynomial_features(X, i + 1)
+        x_ = add_polynomial_features(X, degree)
         # create the model
         my_lr = MyLR(theta, alpha = alpha, max_iter = max_iter)
         # fit the model
@@ -92,7 +93,7 @@ if __name__ == "__main__":
         # Evaluates and prints evaluation score (MSE) of each of the six models
         mse = my_lr.mse_(Y, y_hat)
         mse_data.append(mse)
-        print(mse)
+        print(f'mse for polynomial model of degree {degree}: {mse}')
         # saving parameters to reproduce the models for plotting
         thetas.append(my_lr.thetas)
         alphas.append(my_lr.alpha)
@@ -128,4 +129,3 @@ if __name__ == "__main__":
         plt.ylim([0, 80])
         plt.legend()
     plt.show()
-
