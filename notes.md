@@ -1,8 +1,16 @@
 # Notes
 
-Notes pour mémoriser les différents concepts.
+Notes complétées au fur et à mesure pour bien mémoriser les différents concepts.
 
-## Regression linéaire
+# Index des notes
+1. [Regression linéaire](#regression-linéaire)
+	- [Monovalué : ajustement affine avec une feature](#monovalué-:-ajustement-affine-avec-une-feature)
+	    - [Entrainement sur un modele linéaire monovalué](#entrainement-sur-un-modele-linéaire-monovalué)
+        - [Fonction coût](#fonction-coût)
+        - [Optimisation des paramètres par l'algorithme de la descente de gradient](#optimisation-des-paramètres-par-l'algorithme-de-la-descente-de-gradient)
+    - [Algebre linéaire](#algebre-linéaire)
+
+# Regression linéaire
 
 Un modèle de regression linéaire est un modèle qui cherche a établir une relation linéaire entre une variable, dite "expliquée" et une ou plusieurs variables, dites "explicatives".
 
@@ -10,13 +18,13 @@ Dans le cadre de l'apprentissage actuel, ces variables sont souvent nommées :
 * x (vecteur de variables), X (matrice de variables), features
 * y (vecteur de variables), étiquettes
 
-### Ajustement affine avec une feature
+## Monovalué : ajustement affine avec une feature
 
 Le premier modèle appris dans le cadre du bootcamp ml est l'ajustement affine. Il s'agit de trouver la fonction `f(x) = ax + b`, où `a` et `b` sont des constantes.
 
 Cette fonction est ensuite appelée fonction de prédiction, puisqu'une fois que l'entrainement aura permis d'ajuster les constantes a et b, le modèle permettra de prédire une valeur de y pour un x donné.
 
-### Fonctionnement de l'entrainement sur un modele linéaire monovalué
+### Entrainement sur un modele linéaire monovalué
 
 L'entrainement d'un modèle se fait en plusieurs étapes :
 1. Préparation des données : data cleaning (valeurs manquantes, detections des pics avec l'ecart type, ...).
@@ -41,7 +49,7 @@ La somme de ces écarts au carré divisée par 2 fois le nombre d'éléments dan
 
 La "fonction coût" ou "fonction objectif" en optimisation mathématique est la fonction qui établi la relation entre les paramètres de la fonction de prédiction (a et b) et le "coût" global du modèle sur le dataset d'entrainement. En fonction des deux paramètres a et b et projetée dans un espace en 3 dimensions, elle a la forme d'un bol. Lorsqu'on l'observe en fonction d'un seul paramètre (en fixant l'autre) sur un plan en 2 dimensions, elle a la forme d'une courbe quadratique retournée, d'une fonction convexe avec un minimum global qui est la valeur minimum du coût et donc la valeur optimale sur l'axe horizontal du paramètre étudié (ici a ou b).
 
-#### Pourquoi utilise t'on le carré de la différence dans le calcul du coût ?
+#### Pourquoi utiliser le carré de la différence dans le calcul du coût ?
 
 La différence entre la prédiction de y et la valeur y du dataset peut être positive ou négative. On peut avoir prédit en dessous ou au dessus de la valeur, mais cela reste une différence.
 
@@ -49,7 +57,7 @@ Pour chaque valeur dans un dataset, la différence peut donc être positive ou n
 
 Le fait de mettre un nombre au carré permet d'obtenir un nombre positif (- * - = +, + * + = +). Cela va augmenter le coût mais celui ci étant utilisé de manière comparative, la conséquence n'est pas grande. On divise par ailleur la somme des différences au carré par le nombre d'enregistrement du dataset afin de garder la même échelle de valeur peu importe le nombre d'enregistrement.
 
-### Pourquoi dans la réalité le coût de mon modèle n'est jamais zéro ?
+#### Pourquoi dans la réalité le coût de mon modèle n'est jamais zéro ?
 
 Dans tout système complexe, il y a beaucoup de petites causes indépendantes qui entrent en compte. Ainsi, si je prend l'exemple d'un dataset contenant des informations sur les caractéristiques de maisons et sur leur coût, je ne pourrais pas prédire exactement à coup sur le coût exact pour toutes les maisons car il y a de nombreux paramètres participant à ce coût que je ne suis pas en mesure de maîtriser. Des genre de features incaptables. Mais je pourrais cependant faire une prédiction "correcte" en m'appuyant sur les bons features.
 
@@ -77,7 +85,7 @@ La descente de gradient fonctionne selon le principe suivant :
 4. On réinjecte les valeurs ajustées des paramètres dans le modèle et on boucle sur une nouvelle itération.
 5. On arrête d'itérer soit après un nombre défini de boucles, soit lorsque la variation des paramètres entre deux itérations est inférieure a un seuil défini à l'avance (epsilon).
 
-## Les petits tricks de l'algebre linéaire
+## Algebre linéaire
 
 Nous travaillons avec des vecteurs et des matrices représentant nos jeux de données ainsi que les paramètres du modèle.
 
