@@ -30,10 +30,10 @@ def data_spliter(x: np.ndarray, y: np.ndarray, proportion: float) -> tuple:
         np.random.shuffle(full_set)
         # slice the train and test sets
         train_set_len = int(proportion * x.shape[0])
-        x_train = full_set[:train_set_len, :-1]
-        x_test = full_set[train_set_len:, :-1]
-        y_train = full_set[:train_set_len, -1]
-        y_test = full_set[train_set_len:, -1]
+        x_train = full_set[:train_set_len, :-1].reshape((-1, x.shape[1]))
+        x_test = full_set[train_set_len:, :-1].reshape((-1, x.shape[1]))
+        y_train = full_set[:train_set_len, -1].reshape((-1, 1))
+        y_test = full_set[train_set_len:, -1].reshape((-1, 1))
         return (x_train, x_test, y_train, y_test)
 
     except (ValueError, TypeError, AttributeError) as exc:

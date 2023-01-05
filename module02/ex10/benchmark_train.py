@@ -5,17 +5,18 @@ of the different models into a file.
 In models.csv are the parameters of all the models I have explored and trained.
 """
 # general modules
+import os
 import numpy as np
 import pandas as pd
 import csv
 import matplotlib.pyplot as plt
 # user modules
 import sys
-sys.path.insert(1, '../ex09/')
+sys.path.insert(1, os.path.join(os.path.dirname(__file__), '..', 'ex09'))
 from data_spliter import data_spliter
-sys.path.insert(1, '../ex07/')
+sys.path.insert(1, os.path.join(os.path.dirname(__file__), '..', 'ex07'))
 from polynomial_model import add_polynomial_features
-sys.path.insert(1, '../ex05')
+sys.path.insert(1, os.path.join(os.path.dirname(__file__), '..', 'ex05'))
 from mylinearregression import MyLinearRegression as MyLR
 
 
@@ -36,6 +37,7 @@ def save_training(writer, nb_model: int, degree: int, thetas: np.ndarray,
     writer.writerow([nb_model, degree, f_thetas, alpha, max_iter, loss])
 
 
+# normalization functions
 def z_score(x: np.ndarray) -> np.ndarray:
     """
     Computes the normalized version of a non-empty numpy.ndarray using the
@@ -104,6 +106,7 @@ def normalize_xset(x: np.ndarray) -> np.ndarray:
     return x_norm
 
 
+# plot functions
 def plot_features(x: np.ndarray, y: np.ndarray):
     """plot each x feature versus y"""
     plt.figure()
@@ -119,8 +122,43 @@ def plot_features(x: np.ndarray, y: np.ndarray):
 # main program
 if __name__ == "__main__":
 
-    # read the dataset
-    dataset = pd.read_csv("./space_avocado.csv")
+    # -------------------------------------------------------------------------
+    # 1. Data import
+    # -------------------------------------------------------------------------
+    # read the dataset and do basic tests on it in case of error
+    try:
+        dataset = pd.read_csv("./space_avocado.csv")
+    except:
+        print("Error when trying to read dataset", file=sys.stderr)
+        sys.exit()
+
+    # check that the expected columns are here and check their type
+
+    # -------------------------------------------------------------------------
+    # 2. Data preparation
+    # -------------------------------------------------------------------------
+    #  combine data
+
+    #  add polynomial features up to degree 4
+
+    # -------------------------------------------------------------------------
+    # 3. Split train set and test set from dataset
+    # -------------------------------------------------------------------------
+
+
+    # -------------------------------------------------------------------------
+    # 4. Train models : basic and multiple combination of polynomial forms
+    # -------------------------------------------------------------------------
+
+
+    # -------------------------------------------------------------------------
+    # 5. Evaluating models
+    # -------------------------------------------------------------------------
+
+
+    # -------------------------------------------------------------------------
+    # 6. Saving all models with their hyperparameters and results
+    # -------------------------------------------------------------------------
 
     # open csv file to save params
     with open('models.csv', 'w') as file:
@@ -137,7 +175,7 @@ if __name__ == "__main__":
         # feature scaling to help gradient descend
         x_train_norm = normalize_xset(x_train)
 
-        # plot every feature with Y to have a global understanding
+        # plot every feature with Y to get a global understanding
         plot_features(x_train, y_train)
 
         # Trains 4 separate Linear Regression models with polynomial

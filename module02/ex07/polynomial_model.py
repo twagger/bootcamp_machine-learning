@@ -19,10 +19,7 @@ def add_polynomial_features(x: np.ndarray, power: int) -> np.ndarray:
         This function should not raise any Exception.
     """
     try:
-        # shape test
-        if x.shape[1] != 1:
-            print('Error: wrong shape on parameter(s)')
-            return None
+        x = x.reshape((-1, 1))
         # calculation
         result = x.copy()
         for i in range(power - 1):
