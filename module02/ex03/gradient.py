@@ -29,7 +29,7 @@ def gradient(x: np.ndarray, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
             return None
         # calculation of the gradient vector
         m = x.shape[0]
-        x_prime = np.hstack((np.ones((m, 1)), x))
+        x_prime = np.c_[np.ones((m, 1)), x]
         return x_prime.T.dot(x_prime.dot(theta) - y) / m
     except (ValueError, TypeError, AttributeError) as exc:
         print(exc)

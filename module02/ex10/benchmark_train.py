@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 import csv
 import matplotlib.pyplot as plt
+
 # user modules
 import sys
 sys.path.insert(1, os.path.join(os.path.dirname(__file__), '..', 'ex09'))
@@ -19,6 +20,8 @@ from polynomial_model import add_polynomial_features
 sys.path.insert(1, os.path.join(os.path.dirname(__file__), '..', 'ex05'))
 from mylinearregression import MyLinearRegression as MyLR
 
+# Global params
+#np.set_printoptions(precision=2)
 
 
 # Helper functions
@@ -137,12 +140,14 @@ if __name__ == "__main__":
     # -------------------------------------------------------------------------
     # 2. Data preparation
     # -------------------------------------------------------------------------
-    #  combine data
+    # combine data
 
-    #  add polynomial features up to degree 4
+    # add polynomial features up to degree 4
+
+    # normalize data
 
     # -------------------------------------------------------------------------
-    # 3. Split train set and test set from dataset
+    # 3. Split train set and test set from dataset -> 80% train / 20% test
     # -------------------------------------------------------------------------
 
 

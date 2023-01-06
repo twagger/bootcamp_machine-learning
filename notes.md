@@ -9,6 +9,7 @@ Notes complétées au fur et à mesure pour bien mémoriser les différents conc
         - [Fonction coût](#fonction-coût)
         - [Optimisation des paramètres par l'algorithme de la descente de gradient](#optimisation-des-paramètres-par-algorithme-de-la-descente-de-gradient)
     - [Algebre linéaire](#algebre-linéaire)
+    - [Multivaluée: ajustement affine avec plusieurs features](#multivaluée-ajustement-affine-avec-plusieurs-features)
 
 # Regression linéaire
 
@@ -20,9 +21,27 @@ Dans le cadre de l'apprentissage actuel, ces variables sont souvent nommées :
 
 ## Monovaluée: ajustement affine avec une feature
 
-Le premier modèle appris dans le cadre du bootcamp ml est l'ajustement affine. Il s'agit de trouver la fonction `f(x) = ax + b`, où `a` et `b` sont des constantes.
+Le premier modèle appris dans le cadre du bootcamp ml est l'ajustement affine. Il s'agit de trouver la fonction 
+```
+ŷ = ax + b
+```
+où `a` et `b` sont des constantes.
 
 Cette fonction est ensuite appelée fonction de prédiction, puisqu'une fois que l'entrainement aura permis d'ajuster les constantes a et b, le modèle permettra de prédire une valeur de y pour un x donné.
+
+### Préparation des données
+
+La préparation des données permet de s'assurer que l'entrainement et donc le paramétrage du modèle ne pâtira pas de données de mauvaise qualité.
+
+Dans le cadre d'une régression linéaire monovaluée, on peut appliquer plusieurs procédés pour préparer les données :
+- Eliminer les lignes vides (feature vide avec étiquette)
+- Remplacer les valeurs vides (par la valeur moyenne par exemple)
+- Eliminer les erreurs de formats (on attend par exemple un nombre et on a une chaine de caractères)
+- Eliminer les erreurs sémantiques et syntaxique : nécessite une analyse préalable
+- Eliminer les doublons
+- Eliminer les valeurs très en dehors des valeurs "normales". On peut pour cela mesurer la dispersion des valeurs du dataset via le calcul de l'écart type et identifier quelles sont les valeurs qui sont trop éloignées de la moyenne et qu'on veut supprimer.
+
+Dans les différentes méthodes il faut en tous les cas choisir entre retirer de la donnée de son dataset et donc entrainer le modèle sur un ensemble plus réduit, ou corrompre le dataset en le modifiant et risquer de biaiser l'entrainement du modèle.
 
 ### Entrainement sur un modele linéaire monovalué
 
@@ -40,6 +59,7 @@ L'entrainement d'un modèle se fait en plusieurs étapes :
     - Les prédictions sont comparées avec les données y du dataset de test et un coût global pour le modèle est établi
     - Le coût est comparé au coût du dataset d'entrainement avec les mêmes paramètres pour déterminer si le modèle est bon sur des données non entrainées (on dit alors qu'il généralise bien) ou si on contraire il n'est pas bon.
     - En fonction du résultat, on peut établir que notre entrainement abouti a un model satisfaisant, ou au contraire a un modèle en overfitting ou en underfitting. Il convient de corriger alors la phase d'entrainement. Différente méthodes existent en fonction de la correction a appliquer.
+
 
 ### Fonction coût
 
@@ -85,7 +105,9 @@ La descente de gradient fonctionne selon le principe suivant :
 4. On réinjecte les valeurs ajustées des paramètres dans le modèle et on boucle sur une nouvelle itération.
 5. On arrête d'itérer soit après un nombre défini de boucles, soit lorsque la variation des paramètres entre deux itérations est inférieure a un seuil défini à l'avance (epsilon).
 
-## Algebre linéaire
+Une bonne manière de vérifier aue la descente de gradient fonctionne correctement est d'afficher le coût du modèle en fonction du nombre d'itérations. Le coût doit baisser à chaque pas de la descente.
+
+## Algèbre linéaire
 
 Nous travaillons avec des vecteurs et des matrices représentant nos jeux de données ainsi que les paramètres du modèle.
 
@@ -96,3 +118,53 @@ Lors des différentes opérations nécessaires à l'entrainement d'un modèle, o
 - Prédiction : en multipliant le vecteur ou la matrice des features avec le vecteur des paramètres (theta) à l'aide du produit vectoriel, on obtient pour chaque ligne du dataset d'entrainement la somme des feature x paramètre. Pour rendre cela possible, étant donné qu'on a un biais dans la prédiction (le b de f(x) = ax + b) qui ne vient pondérer aucun feature, on ajoute une feature fictive pour chaque enregistrement dont la valeur est 1 (une colonne de 1 dans le vecteur / la matrice des features). Cette colonne est placée en première colonne, et le biais est placé en premier dans le vecteur des paramètres. Ainsi on aura bien le biais multiplié par 1 dans la formule.
 
 - Coût : Lors du calcul du coût on utilise les propriétés de soustractions entre deux vecteurs de même taille pour calculer la différence entre le vecteur de prédiction et le vecteur des étiquettes pour chaque élément, et on fait la somme des carrés du résultat en utilisant produit vectoriel. En effet, faire un produit vectoriel d'un vecteur par lui même revient a faire la somme de ses valeurs au carré.
+
+## Multivaluée: ajustement affine avec plusieurs features
+
+La régression linéaire multivaluée permet de prédire la valeur de l'étiquette à partir de plusieurs features et non plus d'une seule.
+La fonction de prédiction évolue pour prendre en compte l'ensemble des features : 
+```
+ŷ = θ₁x₁ + θ₂x₂ + ... + θₙxₙ + θ₀
+```
+
+Cette equation introduit la nécessité d'associer à chaque feature un poids/ paramètre/ théta qui sera ajusté par entrainement.
+
+Le vecteur des thétas comportera donc autant d'éléments qu'il y a de features utilisées dans fonction de prédiction + 1 pour le biais (θ₀).
+
+### Préparation des données
+
+Features enginering :
+- Augmentation des features par association
+- Augmentation polynomiale
+- Normalisation dans le cas ou les échelles des features sont différentes (peut aussi s'appliquer apres l'augmentation polynomiale)
+
+
+### Ingénierie des caractéristiques (Feature engineering)
+
+
+## Régression polynomiale
+
+Notes en vrac : 
+
+Lorsqu'on plot une regression polynomiale, l'axe horizontal est bien l'axe original avant ajout des features polynomiales.
+
+Lors d'une descente de gradient sur une régression polynomiale, on va donner plus de poid au paramètre associé au feature de degré le plus important dans le calcul de la prédiction et réduire les autres degrés.
+
+La descente de gradient va permettre de sélectionner pour nous les meilleures features en abaissant le poids des features de faible importance et en montant le poids des features dont l'ajustement permet le mieux de réduire le coût de la prédiction sur les données d'entrainement.
+
+# Bibliothèques
+
+Principales bibliothèques et fonctions associées pour la régression linéaire.
+
+## Scikit-Learn
+
+from sklearn.linear_model import SGDRegressor
+from sklearn.preprocessing import StandardScaler
+
+prepare data :
+scaler = StandardScaler()
+X_norm = scaler.fit_transform(X_train)
+
+train model :
+sgdr = SGDRegressor(max_iter=1000)
+sgdr.fit(X_norm, y_train)

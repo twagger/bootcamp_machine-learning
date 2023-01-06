@@ -1,7 +1,7 @@
 """Polynomial model feature"""
 import numpy as np
 
-
+# We could use the percentile calculator to divide this
 def data_spliter(x: np.ndarray, y: np.ndarray, proportion: float) -> tuple:
     """
     Shuffles and splits the dataset (given by x and y) into a training and a

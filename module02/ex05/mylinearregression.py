@@ -33,7 +33,7 @@ class MyLinearRegression():
         """
         try:
             m = x.shape[0]
-            x_prime = np.hstack((np.ones((m, 1)), x))
+            x_prime = np.c_[np.ones((m, 1)), x]
             return x_prime.dot(self.thetas)
         except (ValueError, TypeError, AttributeError) as exc:
             print(exc)
@@ -133,7 +133,7 @@ class MyLinearRegression():
             # calculation of the gradient vector
             # 1. X to X'
             m = x.shape[0]
-            x_prime = np.hstack((np.ones((m, 1)), x))
+            x_prime = np.c_[np.ones((m, 1)), x]
             # 2. loop
             for _ in range(self.max_iter):
                 # 3. calculate the grandient for current thetas
