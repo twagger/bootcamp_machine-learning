@@ -4,10 +4,10 @@ Notes complétées au fur et à mesure pour bien mémoriser les différents conc
 
 # Index des notes
 1. [Regression linéaire](#regression-linéaire)
-	- [Monovalué : ajustement affine avec une feature](#monovalué-:-ajustement-affine-avec-une-feature)
+	- [Monovaluée: ajustement affine avec une feature](#monovaluée-ajustement-affine-avec-une-feature)
 	    - [Entrainement sur un modele linéaire monovalué](#entrainement-sur-un-modele-linéaire-monovalué)
         - [Fonction coût](#fonction-coût)
-        - [Optimisation des paramètres par l'algorithme de la descente de gradient](#optimisation-des-paramètres-par-l'algorithme-de-la-descente-de-gradient)
+        - [Optimisation des paramètres par l'algorithme de la descente de gradient](#optimisation-des-paramètres-par-algorithme-de-la-descente-de-gradient)
     - [Algebre linéaire](#algebre-linéaire)
 
 # Regression linéaire
@@ -18,7 +18,7 @@ Dans le cadre de l'apprentissage actuel, ces variables sont souvent nommées :
 * x (vecteur de variables), X (matrice de variables), features
 * y (vecteur de variables), étiquettes
 
-## Monovalué : ajustement affine avec une feature
+## Monovaluée: ajustement affine avec une feature
 
 Le premier modèle appris dans le cadre du bootcamp ml est l'ajustement affine. Il s'agit de trouver la fonction `f(x) = ax + b`, où `a` et `b` sont des constantes.
 
@@ -67,7 +67,7 @@ En quoi le fait d'avoir forcément une partie de l'erreur dûe au bruit gaussien
 Bon lien : https://datascience.stackexchange.com/questions/10188/why-do-cost-functions-use-the-square-error
 
 
-### Optimisation des paramètres par l'algorithme de la descente de gradient
+### Optimisation des paramètres par algorithme de la descente de gradient
 
 Le but de l'algorithme de la descente de gradient est d'optimiser les paramètres de la fonction de prédiction afin de réduire le coût global du modèle.
 
