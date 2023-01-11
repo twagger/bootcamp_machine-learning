@@ -21,10 +21,22 @@ sys.path.insert(1, os.path.join(os.path.dirname(__file__), '..', 'ex05'))
 from mylinearregression import MyLinearRegression as MyLR
 
 # Global params
+max_iter = 5000
+alpha = 1e-1
 #np.set_printoptions(precision=2)
 
+# specific data structure
+class ModelWithInfos:
+    """
+    Specific very small class to store model with basic infos such as the name
+    of the features, the model itself and maybe more
+    """
+    def __init__(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
-# Helper functions
+
+# Data preparation functions
 def polynomial_matrix(x: np.ndarray, degree: int) -> np.ndarray:
     """return the polynomial matrix for x"""
     x_ = np.empty((x.shape[0], 0))
@@ -33,14 +45,39 @@ def polynomial_matrix(x: np.ndarray, degree: int) -> np.ndarray:
     return x_
 
 
-def save_training(writer, nb_model: int, degree: int, thetas: np.ndarray,
+def combined_features(x: np.ndarray, max=2) -> np.ndarray:
+    """
+    return the combined features matrix for x where every feature is combined
+    with each other feature to the maximum level of combination
+    """
+    x_comb = np.empty((x.shape[0], 0))
+    for feature in range(x.shape[1]):
+        for combined in range(feature + 1, x.shape[1]):
+            x_comb = np.hstack((x_comb, np.array(x[:, feature] * \
+                                x[:, combined]).reshape((-1, 1))))
+    if (max > 2): # to make generic
+        x_comb = np.hstack((x_comb, np.array(x[:, 0] * \
+                                x[:, 1] * x[:, 2]).reshape((-1, 1))))
+    return np.hstack((x, x_comb))
+
+
+def normalize_xset(x: np.ndarray) -> np.ndarray:
+    """Normalize each feature an entire set of data"""
+    x_norm = np.empty((x.shape[0], 0))
+    for feature in range(x.shape[1]):
+        x_norm = np.hstack((x_norm, z_score(x[:, feature])))
+    return x_norm
+
+
+# Saving to file functions
+def save_training(writer, nb_model: int, form: str, thetas: np.ndarray,
                   alpha: float, max_iter: int, loss: float):
     """save the training in csv file"""
-    f_thetas = '[' + ', '.join(str(t) for t in my_lr.thetas.flatten()) + ']'
-    writer.writerow([nb_model, degree, f_thetas, alpha, max_iter, loss])
+    thetas_str = ','.join([f'[{theta[0]}]' for theta in thetas])
+    writer.writerow([nb_model, form, thetas_str, alpha, max_iter, loss])
 
 
-# normalization functions
+# normalization function
 def z_score(x: np.ndarray) -> np.ndarray:
     """
     Computes the normalized version of a non-empty numpy.ndarray using the
@@ -71,55 +108,10 @@ def z_score(x: np.ndarray) -> np.ndarray:
         return None
 
 
-def minmax(x: np.ndarray) -> np.ndarray:
-    """
-    Computes the normalized version of a non-empty numpy.ndarray using the
-        min-max standardization.
-    Args:
-        x: has to be an numpy.ndarray, a vector.
-    Returns:
-        x' as a numpy.ndarray.
-        None if x is a non-empty numpy.ndarray or not a numpy.ndarray.
-    Raises:
-        This function shouldn't raise any Exception.
-    """
-    try:
-        # type test
-        if not isinstance(x, np.ndarray):
-            print("Something went wrong")
-            return None
-        # shape test
-        x = x.reshape((-1, 1))
-        # normalization
-        min_max_formula = lambda x, min, max: (x - min) / (max - min)
-        minmax_normalize = np.vectorize(min_max_formula)
-        x_prime = minmax_normalize(x, np.min(x), np.max(x))
-        return x_prime
-
-    except (ValueError, TypeError, AttributeError) as exc:
-        print(exc)
-        return None
-
-
-def normalize_xset(x: np.ndarray) -> np.ndarray:
-    """Normalize each feature an entire set of data"""
-    x_norm = np.empty((x.shape[0], 0))
-    for feature in range(x.shape[1]):
-        x_norm = np.hstack((x_norm, minmax(x[:, feature])))
-    return x_norm
-
-
-# plot functions
-def plot_features(x: np.ndarray, y: np.ndarray):
-    """plot each x feature versus y"""
-    plt.figure()
-    for feature in range(x.shape[1]):
-        plt.subplot(1, x.shape[1], feature + 1)
-        plt.grid()
-        plt.title(f'{dataset.columns.tolist()[feature + 1]}')
-        plt.scatter(x[:, feature], y)
-        plt.ylabel(f'{dataset.columns.tolist()[-1]}')
-    plt.show()
+# misc tools
+def save_model(models: list, model: MyLR, features: list):
+    """save a model into a dictionnary of models"""
+    models.append(ModelWithInfos(m=model, features=features, loss=None))
 
 
 # main program
@@ -130,107 +122,135 @@ if __name__ == "__main__":
     # -------------------------------------------------------------------------
     # read the dataset and do basic tests on it in case of error
     try:
-        dataset = pd.read_csv("./space_avocado.csv")
+        df = pd.read_csv("./space_avocado.csv")
     except:
         print("Error when trying to read dataset", file=sys.stderr)
         sys.exit()
 
     # check that the expected columns are here and check their type
+    if not set(['weight', 'prod_distance',
+                'time_delivery', 'target']).issubset(df.columns):
+        print("Missing columns", file=sys.stderr)
+        sys.exit()
+    if (df.weight.dtype != float or df.prod_distance.dtype != float
+            or df.time_delivery.dtype != float or df.target.dtype != float):
+        print("Wrong column type", file=sys.stderr)
+        sys.exit()
+
+    # set X and y
+    X = np.array(df[['weight', 'prod_distance',
+                     'time_delivery']]).reshape((-1, 3))
+    y = np.array(df['target']).reshape((-1, 1))
 
     # -------------------------------------------------------------------------
     # 2. Data preparation
     # -------------------------------------------------------------------------
     # combine data
+    # - basic features : w, p, t
+    # - composite features : wp, wt, pt, wpt
+    # - all : w, p, t, wp, wt, pt, wpt
+    x_comb = combined_features(X, max=3)
 
     # add polynomial features up to degree 4
+    # degree 1 : w, p, t, wp, wt, pt, wpt
+    # degree 2 : w, w2, p, p2, t, t2, wp, wp2, wt, wt2, pt, pt2, wpt, wpt2
+    # degree 3 : w, w2, w3, p, p2, p3, t, t2, t3, wp, wp2, wp3, wt, wt2, wt3,
+    #            pt, pt2, pt3, wpt, wpt2, wpt3
+    # degree 4 : w, w2, w3, w4, p, p2, p3, p4, t, t2, t3, t4, wp, wp2, wp3,
+    #            wp4, wt, wt2, wt3, wt4, pt, pt2, pt3, pt4, wpt, wpt2, wpt3,
+    #            wpt4
+    x_poly = polynomial_matrix(x_comb, 4)
 
     # normalize data
+    x_norm = normalize_xset(x_poly)
+
+    # switch back to dataframe and relabel columns to ease future use
+    cols = ['w', 'w2', 'w3', 'w4', 'p', 'p2', 'p3', 'p4', 't', 't2', 't3',
+            't4', 'wp', 'wp2', 'wp3', 'wp4', 'wt', 'wt2', 'wt3', 'wt4', 'pt',
+            'pt2', 'pt3', 'pt4', 'wpt', 'wpt2', 'wpt3', 'wpt4']
+    df = pd.DataFrame(data=x_norm, columns=cols)
 
     # -------------------------------------------------------------------------
     # 3. Split train set and test set from dataset -> 80% train / 20% test
     # -------------------------------------------------------------------------
-
-
-    # -------------------------------------------------------------------------
-    # 4. Train models : basic and multiple combination of polynomial forms
-    # -------------------------------------------------------------------------
-
+    # split function to produce X_train, X_test, y_train, y_test
+    X_train, X_test, y_train, y_test = data_spliter(x_norm, y, 0.8)
 
     # -------------------------------------------------------------------------
-    # 5. Evaluating models
+    # 4. Create models : from basic to complex combination of feat
     # -------------------------------------------------------------------------
+    models = []
 
+    # BASIC
+    # one parameter
+    lr_w = MyLR(np.random.rand(2, 1), alpha=alpha, max_iter=max_iter)
+    save_model(models, lr_w, ['w'])
+
+    lr_p = MyLR(np.random.rand(2, 1), alpha=alpha, max_iter=max_iter)
+    save_model(models, lr_p, ['p'])
+
+    lr_t = MyLR(np.random.rand(2, 1), alpha=alpha, max_iter=max_iter)
+    save_model(models, lr_t, ['t'])
+
+    # two parameters
+    lr_w_p = MyLR(np.random.rand(3, 1), alpha=alpha, max_iter=max_iter)
+    save_model(models, lr_w_p, ['w', 'p'])
+
+    lr_w_t = MyLR(np.random.rand(3, 1), alpha=alpha, max_iter=max_iter)
+    save_model(models, lr_w_t, ['w', 't'])
+
+    lr_t_p = MyLR(np.random.rand(3, 1), alpha=alpha, max_iter=max_iter)
+    save_model(models, lr_t_p, ['t', 'p'])
+
+    # three parameters
+    lr_w_p_t = MyLR(np.random.rand(4, 1), alpha=alpha, max_iter=max_iter)
+    save_model(models, lr_w_p, ['w', 'p', 't'])
+
+    # COMBINED PARAMS
+    # one parameter
+    # lr_wp = MyLR(np.random.rand(2, 1), alpha=alpha, max_iter=max_iter)
+    # lr_wt = MyLR(np.random.rand(2, 1), alpha=alpha, max_iter=max_iter)
+    # lr_pt = MyLR(np.random.rand(2, 1), alpha=alpha, max_iter=max_iter)
+    # lr_wpt = MyLR(np.random.rand(2, 1), alpha=alpha, max_iter=max_iter)
+    # # two parameters (1 combined with 1 non combined)
+    # lr_wp_t = MyLR(np.random.rand(3, 1), alpha=alpha, max_iter=max_iter)
+    # lr_wt_p = MyLR(np.random.rand(3, 1), alpha=alpha, max_iter=max_iter)
+    # lr_tp_w = MyLR(np.random.rand(3, 1), alpha=alpha, max_iter=max_iter)
+
+    # POLYNOMIAL
+    # 2 degrees
+
+    # 3 degrees
+
+    # 4 degrees
+
+    # -------------------------------------------------------------------------
+    # 5. Train models and store the loss
+    # -------------------------------------------------------------------------
+    # this could benefit from multi-threading
+    for model in models:
+        # Select the subset of features associated with the model
+        features = model.features
+        X = np.array(df[features]).reshape((-1, len(features)))
+        # Train the model on 80% of the data
+        model.m.fit_(X_train, y_train)
+        # Test the model against 20% of the data and mesure the loss
+        losses.append(model.loss_(y_test, model.predict_(X_test)))
 
     # -------------------------------------------------------------------------
     # 6. Saving all models with their hyperparameters and results
     # -------------------------------------------------------------------------
-
     # open csv file to save params
     with open('models.csv', 'w') as file:
         writer = csv.writer(file)
-        writer.writerow(["model", "degree", "thetas", "alpha", "max_iter",
-                         "split"])
+        writer.writerow(["model", "form", "thetas", "alpha", "max_iter",
+                         "loss"])
 
-        # create x matrix and y vector
-        x = np.array(dataset[['weight', 'prod_distance',
-                            'time_delivery']]).reshape((-1, 3))
-        y = np.array(dataset['target']).reshape((-1, 1))
-        x_train, x_test, y_train, y_test = data_spliter(x, y, 0.8)
-
-        # feature scaling to help gradient descend
-        x_train_norm = normalize_xset(x_train)
-
-        # plot every feature with Y to get a global understanding
-        plot_features(x_train, y_train)
-
-        # Trains 4 separate Linear Regression models with polynomial
-        # hypothesis with degrees ranging from 1 to 4
-        nb_model = 0
-        for degree in range(1, 3):
-
-            # global params
-            theta = np.zeros((degree * x_train.shape[1] + 1, 1))
-            alpha = 0.001
-            max_iter = 1
-            # specific params
-            if degree == 1:
-                alpha = 0.666
-                max_iter = 1
-
-            # add polynomial features for each feature
-            x_train_ = polynomial_matrix(x_train_norm, degree)
-
-            # create the model
-            my_lr = MyLR(theta, alpha = alpha, max_iter = max_iter)
-            nb_model += 1
-
-            # fit the model and store loss each time to observe progress
-            losses = []
-            it = []
-            for iteration in range(50000):
-                my_lr.fit_(x_train_, y_train)
-                x_test_ = polynomial_matrix(x_test, degree)
-                y_hat_test = my_lr.predict_(x_test_)
-                losses.append(my_lr.loss_(y_test, y_hat_test))
-                it.append(iteration)
-
-            # plot the learning curve
-            plt.figure()
-            plt.grid()
-            plt.title(f'Learning curve with alpha = {alpha}')
-            plt.plot(it, losses)
-            plt.xlabel('number of iteration')
-            plt.ylim([min(losses) * 1.00001, max(losses) * 1.00001])
-            plt.ylabel('Loss')
-            plt.show()
-
-            # predict and add polynomial features for each test feature
-            x_test_ = polynomial_matrix(x_test, degree)
-            y_hat_test = my_lr.predict_(x_test_)
-
-            # Evaluates and prints evaluation score (loss) of each model
-            loss = my_lr.loss_(y_test, y_hat_test)
-
+        for ii, model in enumerate(models):
             # saving parameters and results in the models.csv file
-            save_training(writer, nb_model, degree, my_lr.thetas, alpha,
-                            max_iter, loss)
+            save_training(writer, ii, forms[ii], model.thetas, alpha, max_iter,
+                          losses[ii])
+
+    # -------------------------------------------------------------------------
+    # 7. Pick best model for space avocado
+    # -------------------------------------------------------------------------
