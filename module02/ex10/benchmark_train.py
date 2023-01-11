@@ -173,8 +173,7 @@ if __name__ == "__main__":
     # -------------------------------------------------------------------------
     # 3. Split train set and test set from dataset -> 80% train / 20% test
     # -------------------------------------------------------------------------
-    # split function to produce X_train, X_test, y_train, y_test
-    X_train, X_test, y_train, y_test = data_spliter(x_norm, y, 0.8)
+    
 
     # -------------------------------------------------------------------------
     # 4. Create models : from basic to complex combination of feat
@@ -204,7 +203,7 @@ if __name__ == "__main__":
 
     # three parameters
     lr_w_p_t = MyLR(np.random.rand(4, 1), alpha=alpha, max_iter=max_iter)
-    save_model(models, lr_w_p, ['w', 'p', 't'])
+    save_model(models, lr_w_p_t, ['w', 'p', 't'])
 
     # COMBINED PARAMS
     # one parameter
@@ -232,10 +231,12 @@ if __name__ == "__main__":
         # Select the subset of features associated with the model
         features = model.features
         X = np.array(df[features]).reshape((-1, len(features)))
+        # split function to produce X_train, X_test, y_train, y_test
+        X_train, X_test, y_train, y_test = data_spliter(X, y, 0.8)
         # Train the model on 80% of the data
         model.m.fit_(X_train, y_train)
         # Test the model against 20% of the data and mesure the loss
-        losses.append(model.loss_(y_test, model.predict_(X_test)))
+        model.loss = model.m.loss_(y_test, model.m.predict_(X_test))
 
     # -------------------------------------------------------------------------
     # 6. Saving all models with their hyperparameters and results
@@ -243,13 +244,13 @@ if __name__ == "__main__":
     # open csv file to save params
     with open('models.csv', 'w') as file:
         writer = csv.writer(file)
-        writer.writerow(["model", "form", "thetas", "alpha", "max_iter",
+        writer.writerow(["model", "features", "thetas", "alpha", "max_iter",
                          "loss"])
 
         for ii, model in enumerate(models):
             # saving parameters and results in the models.csv file
-            save_training(writer, ii, forms[ii], model.thetas, alpha, max_iter,
-                          losses[ii])
+            save_training(writer, ii, model.features, model.m.thetas, alpha,
+                          max_iter, model.loss)
 
     # -------------------------------------------------------------------------
     # 7. Pick best model for space avocado
