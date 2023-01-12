@@ -6,6 +6,8 @@ In models.csv are the parameters of all the models I have explored and trained.
 """
 # general modules
 import os
+import itertools
+import concurrent.futures
 import numpy as np
 import pandas as pd
 import csv
@@ -21,15 +23,15 @@ sys.path.insert(1, os.path.join(os.path.dirname(__file__), '..', 'ex05'))
 from mylinearregression import MyLinearRegression as MyLR
 
 # Global params
-max_iter = 5000
+max_iter = 10000
 alpha = 1e-1
 #np.set_printoptions(precision=2)
 
 # specific data structure
 class ModelWithInfos:
     """
-    Specific very small class to store model with basic infos such as the name
-    of the features, the model itself and maybe more
+    Generic very small class to store model with basic infos such as the name
+    of the features, the model itself and maybe more if needed
     """
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
@@ -45,20 +47,18 @@ def polynomial_matrix(x: np.ndarray, degree: int) -> np.ndarray:
     return x_
 
 
-def combined_features(x: np.ndarray, max=2) -> np.ndarray:
+def combined_features(x: np.ndarray, max: int = 2) -> np.ndarray:
     """
     return the combined features matrix for x where every feature is combined
     with each other feature to the maximum level of combination
     """
-    x_comb = np.empty((x.shape[0], 0))
-    for feature in range(x.shape[1]):
-        for combined in range(feature + 1, x.shape[1]):
-            x_comb = np.hstack((x_comb, np.array(x[:, feature] * \
-                                x[:, combined]).reshape((-1, 1))))
-    if (max > 2): # to make generic
-        x_comb = np.hstack((x_comb, np.array(x[:, 0] * \
-                                x[:, 1] * x[:, 2]).reshape((-1, 1))))
-    return np.hstack((x, x_comb))
+    combined = np.copy(x)
+    for ii in range(2, max + 1):
+        # itertools to generate all unique combination (tuple) of columns
+        # I transpose x because itertools.combinations operates on rows
+        for subset in itertools.combinations(x.T, ii):
+            combined = np.c_[combined, np.prod(subset, axis=0)]
+    return combined
 
 
 def normalize_xset(x: np.ndarray) -> np.ndarray:
@@ -108,6 +108,20 @@ def z_score(x: np.ndarray) -> np.ndarray:
         return None
 
 
+# model training function to push it to multithreading
+def train_model(model: ModelWithInfos, df):
+    """Train the model and save information about its performance"""
+    # Select the subset of features associated with the model
+    features = model.features
+    X = np.array(df[features]).reshape((-1, len(features)))
+    # split function to produce X_train, X_test, y_train, y_test
+    X_train, X_test, y_train, y_test = data_spliter(X, y, 0.8)
+    # Train the model on 80% of the data
+    model.m.fit_(X_train, y_train)
+    # Test the model against 20% of the data and mesure the loss
+    model.loss = model.m.loss_(y_test, model.m.predict_(X_test))
+
+
 # misc tools
 def save_model(models: list, model: MyLR, features: list):
     """save a model into a dictionnary of models"""
@@ -143,7 +157,7 @@ if __name__ == "__main__":
     y = np.array(df['target']).reshape((-1, 1))
 
     # -------------------------------------------------------------------------
-    # 2. Data preparation
+    # 2. Data preparation : augmentation
     # -------------------------------------------------------------------------
     # combine data
     # - basic features : w, p, t
@@ -171,39 +185,34 @@ if __name__ == "__main__":
     df = pd.DataFrame(data=x_norm, columns=cols)
 
     # -------------------------------------------------------------------------
-    # 3. Split train set and test set from dataset -> 80% train / 20% test
-    # -------------------------------------------------------------------------
-    
-
-    # -------------------------------------------------------------------------
-    # 4. Create models : from basic to complex combination of feat
+    # 3. Create models : from basic to complex combination of feat
     # -------------------------------------------------------------------------
     models = []
 
     # BASIC
     # one parameter
-    lr_w = MyLR(np.random.rand(2, 1), alpha=alpha, max_iter=max_iter)
-    save_model(models, lr_w, ['w'])
+    w_ = MyLR(np.random.rand(2, 1), alpha=alpha, max_iter=max_iter)
+    save_model(models, w_, ['w'])
 
-    lr_p = MyLR(np.random.rand(2, 1), alpha=alpha, max_iter=max_iter)
-    save_model(models, lr_p, ['p'])
+    p_ = MyLR(np.random.rand(2, 1), alpha=alpha, max_iter=max_iter)
+    save_model(models, p_, ['p'])
 
-    lr_t = MyLR(np.random.rand(2, 1), alpha=alpha, max_iter=max_iter)
-    save_model(models, lr_t, ['t'])
+    t_ = MyLR(np.random.rand(2, 1), alpha=alpha, max_iter=max_iter)
+    save_model(models, t_, ['t'])
 
     # two parameters
-    lr_w_p = MyLR(np.random.rand(3, 1), alpha=alpha, max_iter=max_iter)
-    save_model(models, lr_w_p, ['w', 'p'])
+    w_p = MyLR(np.random.rand(3, 1), alpha=alpha, max_iter=max_iter)
+    save_model(models, w_p, ['w', 'p'])
 
-    lr_w_t = MyLR(np.random.rand(3, 1), alpha=alpha, max_iter=max_iter)
-    save_model(models, lr_w_t, ['w', 't'])
+    w_t = MyLR(np.random.rand(3, 1), alpha=alpha, max_iter=max_iter)
+    save_model(models, w_t, ['w', 't'])
 
-    lr_t_p = MyLR(np.random.rand(3, 1), alpha=alpha, max_iter=max_iter)
-    save_model(models, lr_t_p, ['t', 'p'])
+    t_p = MyLR(np.random.rand(3, 1), alpha=alpha, max_iter=max_iter)
+    save_model(models, t_p, ['t', 'p'])
 
     # three parameters
-    lr_w_p_t = MyLR(np.random.rand(4, 1), alpha=alpha, max_iter=max_iter)
-    save_model(models, lr_w_p_t, ['w', 'p', 't'])
+    w_p_t = MyLR(np.random.rand(4, 1), alpha=alpha, max_iter=max_iter)
+    save_model(models, w_p_t, ['w', 'p', 't'])
 
     # COMBINED PARAMS
     # one parameter
@@ -224,22 +233,15 @@ if __name__ == "__main__":
     # 4 degrees
 
     # -------------------------------------------------------------------------
-    # 5. Train models and store the loss
+    # 4. Train models and store the loss
     # -------------------------------------------------------------------------
-    # this could benefit from multi-threading
+    # multithreading for model training and loss calculation
     for model in models:
-        # Select the subset of features associated with the model
-        features = model.features
-        X = np.array(df[features]).reshape((-1, len(features)))
-        # split function to produce X_train, X_test, y_train, y_test
-        X_train, X_test, y_train, y_test = data_spliter(X, y, 0.8)
-        # Train the model on 80% of the data
-        model.m.fit_(X_train, y_train)
-        # Test the model against 20% of the data and mesure the loss
-        model.loss = model.m.loss_(y_test, model.m.predict_(X_test))
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            executor.submit(train_model, model, df)
 
     # -------------------------------------------------------------------------
-    # 6. Saving all models with their hyperparameters and results
+    # 5. Save all models with their hyperparameters and results
     # -------------------------------------------------------------------------
     # open csv file to save params
     with open('models.csv', 'w') as file:
@@ -253,5 +255,8 @@ if __name__ == "__main__":
                           max_iter, model.loss)
 
     # -------------------------------------------------------------------------
-    # 7. Pick best model for space avocado
+    # 6. Pick best model for space avocado
     # -------------------------------------------------------------------------
+    # plot different graphs to compare models
+
+    # pick the model with the minimum loss
