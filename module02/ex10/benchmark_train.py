@@ -23,9 +23,8 @@ sys.path.insert(1, os.path.join(os.path.dirname(__file__), '..', 'ex05'))
 from mylinearregression import MyLinearRegression as MyLR
 
 # Global params
-max_iter = 10000
+max_iter = 100000
 alpha = 1e-1
-#np.set_printoptions(precision=2)
 
 # specific data structure
 class ModelWithInfos:
@@ -157,7 +156,7 @@ if __name__ == "__main__":
     y = np.array(df['target']).reshape((-1, 1))
 
     # -------------------------------------------------------------------------
-    # 2. Data preparation : augmentation
+    # 2. Data preparation : augmentation (no need to clean here)
     # -------------------------------------------------------------------------
     # combine data
     # - basic features : w, p, t
@@ -175,7 +174,7 @@ if __name__ == "__main__":
     #            wpt4
     x_poly = polynomial_matrix(x_comb, 4)
 
-    # normalize data
+    # normalize data to ease thetas optimization through gradient descent
     x_norm = normalize_xset(x_poly)
 
     # switch back to dataframe and relabel columns to ease future use
@@ -185,52 +184,140 @@ if __name__ == "__main__":
     df = pd.DataFrame(data=x_norm, columns=cols)
 
     # -------------------------------------------------------------------------
-    # 3. Create models : from basic to complex combination of feat
+    # 3. Create models : from basic to complex combination of features
     # -------------------------------------------------------------------------
     models = []
 
     # BASIC
     # one parameter
-    w_ = MyLR(np.random.rand(2, 1), alpha=alpha, max_iter=max_iter)
-    save_model(models, w_, ['w'])
-
-    p_ = MyLR(np.random.rand(2, 1), alpha=alpha, max_iter=max_iter)
-    save_model(models, p_, ['p'])
-
-    t_ = MyLR(np.random.rand(2, 1), alpha=alpha, max_iter=max_iter)
-    save_model(models, t_, ['t'])
+    model = MyLR(np.random.rand(2, 1), alpha=alpha, max_iter=max_iter)
+    [save_model(models, model, [feat]) for feat in ['w',
+                                                    'p',
+                                                    't']]
 
     # two parameters
-    w_p = MyLR(np.random.rand(3, 1), alpha=alpha, max_iter=max_iter)
-    save_model(models, w_p, ['w', 'p'])
-
-    w_t = MyLR(np.random.rand(3, 1), alpha=alpha, max_iter=max_iter)
-    save_model(models, w_t, ['w', 't'])
-
-    t_p = MyLR(np.random.rand(3, 1), alpha=alpha, max_iter=max_iter)
-    save_model(models, t_p, ['t', 'p'])
+    model = MyLR(np.random.rand(3, 1), alpha=alpha, max_iter=max_iter)
+    [save_model(models, model, feat) for feat in [['w', 'p'],
+                                                  ['w', 't'],
+                                                  ['t', 'p']]]
 
     # three parameters
-    w_p_t = MyLR(np.random.rand(4, 1), alpha=alpha, max_iter=max_iter)
-    save_model(models, w_p_t, ['w', 'p', 't'])
+    model = MyLR(np.random.rand(4, 1), alpha=alpha, max_iter=max_iter)
+    save_model(models, model, ['w', 'p', 't'])
 
     # COMBINED PARAMS
     # one parameter
-    # lr_wp = MyLR(np.random.rand(2, 1), alpha=alpha, max_iter=max_iter)
-    # lr_wt = MyLR(np.random.rand(2, 1), alpha=alpha, max_iter=max_iter)
-    # lr_pt = MyLR(np.random.rand(2, 1), alpha=alpha, max_iter=max_iter)
-    # lr_wpt = MyLR(np.random.rand(2, 1), alpha=alpha, max_iter=max_iter)
-    # # two parameters (1 combined with 1 non combined)
-    # lr_wp_t = MyLR(np.random.rand(3, 1), alpha=alpha, max_iter=max_iter)
-    # lr_wt_p = MyLR(np.random.rand(3, 1), alpha=alpha, max_iter=max_iter)
-    # lr_tp_w = MyLR(np.random.rand(3, 1), alpha=alpha, max_iter=max_iter)
+    model = MyLR(np.random.rand(2, 1), alpha=alpha, max_iter=max_iter)
+    [save_model(models, model, [feat]) for feat in ['wp',
+                                                    'wt',
+                                                    'pt',
+                                                    'wpt']]
+
+    # two parameters (1 combined with 1 non combined)
+    model = MyLR(np.random.rand(3, 1), alpha=alpha, max_iter=max_iter)
+    [save_model(models, model, feat) for feat in [['wp', 't'],
+                                                  ['wt', 'p'],
+                                                  ['pt', 'w']]]
+
 
     # POLYNOMIAL
-    # 2 degrees
+    # one parameter, 2 degrees
+    model = MyLR(np.random.rand(3, 1), alpha=alpha, max_iter=max_iter)
+    [save_model(models, model, feat) for feat in [['w', 'w2'],
+                                                  ['p', 'p2'],
+                                                  ['t', 't2']]]
+    # one parameter, 3 degrees
+    model = MyLR(np.random.rand(4, 1), alpha=alpha, max_iter=max_iter)
+    [save_model(models, model, feat) for feat in [['w', 'w2', 'w3'],
+                                                  ['p', 'p2', 'p3'],
+                                                  ['t', 't2', 't3']]]
 
-    # 3 degrees
+    # one parameter, 4 degrees
+    model = MyLR(np.random.rand(5, 1), alpha=alpha, max_iter=max_iter)
+    [save_model(models, model, feat) for feat in [['w', 'w2', 'w3', 'w4'],
+                                                  ['p', 'p2', 'p3', 'p4'],
+                                                  ['t', 't2', 't3', 't4']]]
 
-    # 4 degrees
+    # two parameters, 2 degrees
+    model = MyLR(np.random.rand(5, 1), alpha=alpha, max_iter=max_iter)
+    [save_model(models, model, feat) for feat in [['w', 'w2', 'p', 'p2'],
+                                                  ['w', 'w2', 't', 't2'],
+                                                  ['t', 't2', 'p', 'p2']]]
+
+    # two parameters, 3 degrees
+    model = MyLR(np.random.rand(7, 1), alpha=alpha, max_iter=max_iter)
+    [save_model(models, model, feat) for feat in [['w', 'w2', 'w3',
+                                                   'p', 'p2', 'p3'],
+                                                  ['w', 'w2', 'w3',
+                                                   't', 't2', 't3'],
+                                                  ['t', 't2', 't3',
+                                                   'p', 'p2', 'p3']]]
+
+    # two parameters, 4 degrees
+    model = MyLR(np.random.rand(9, 1), alpha=alpha, max_iter=max_iter)
+    [save_model(models, model, feat) for feat in [['w', 'w2', 'w3', 'w4',
+                                                   'p', 'p2', 'p3', 'p4'],
+                                                  ['w', 'w2', 'w3', 'w4',
+                                                   't', 't2', 't3', 't4'],
+                                                  ['t', 't2', 't3', 't4',
+                                                   'p', 'p2', 'p3', 'p4']]]
+    # three parameters, 2 degrees
+    model = MyLR(np.random.rand(7, 1), alpha=alpha, max_iter=max_iter)
+    save_model(models, model, ['w', 'w2',
+                               'p', 'p2',
+                               't', 't2'])
+
+    # three parameters, 3 degrees
+    model = MyLR(np.random.rand(10, 1), alpha=alpha, max_iter=max_iter)
+    save_model(models, model, ['w', 'w2', 'w3',
+                               'p', 'p2', 'p3',
+                               't', 't2', 't3'])
+
+    # three parameters, 4 degrees
+    model = MyLR(np.random.rand(13, 1), alpha=alpha, max_iter=max_iter)
+    save_model(models, model, ['w', 'w2', 'w3', 'w4',
+                               'p', 'p2', 'p3', 'p4',
+                               't', 't2', 't3', 't4'])
+
+    # all params, including combined, 1 degree
+    model = MyLR(np.random.rand(13, 1), alpha=alpha, max_iter=max_iter)
+    save_model(models, model, ['w',
+                               'p',
+                               't',
+                               'wp',
+                               'wt',
+                               'pt',
+                               'wpt',])
+
+    # all params, including combined, 2 degrees
+    model = MyLR(np.random.rand(13, 1), alpha=alpha, max_iter=max_iter)
+    save_model(models, model, ['w', 'w2',
+                               'p', 'p2',
+                               't', 't2',
+                               'wp', 'wp2',
+                               'wt', 'wt2',
+                               'pt', 'pt2',
+                               'wpt', 'wpt2',])
+
+    # all params, including combined, 3 degrees
+    model = MyLR(np.random.rand(13, 1), alpha=alpha, max_iter=max_iter)
+    save_model(models, model, ['w', 'w2', 'w3',
+                               'p', 'p2', 'p3',
+                               't', 't2', 't3',
+                               'wp', 'wp2', 'wp3',
+                               'wt', 'wt2', 'wt3',
+                               'pt', 'pt2', 'pt3',
+                               'wpt', 'wpt2', 'wpt3',])
+
+    # all params, including combined, 4 degrees
+    model = MyLR(np.random.rand(13, 1), alpha=alpha, max_iter=max_iter)
+    save_model(models, model, ['w', 'w2', 'w3', 'w4',
+                               'p', 'p2', 'p3', 'p4',
+                               't', 't2', 't3', 't4',
+                               'wp', 'wp2', 'wp3', 'wp4',
+                               'wt', 'wt2', 'wt3', 'wt4',
+                               'pt', 'pt2', 'pt3', 'pt4',
+                               'wpt', 'wpt2', 'wpt3', 'wpt4'])
 
     # -------------------------------------------------------------------------
     # 4. Train models and store the loss
