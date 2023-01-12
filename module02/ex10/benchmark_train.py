@@ -23,7 +23,7 @@ sys.path.insert(1, os.path.join(os.path.dirname(__file__), '..', 'ex05'))
 from mylinearregression import MyLinearRegression as MyLR
 
 # Global params
-max_iter = 100000
+max_iter = 1000000
 alpha = 1e-1
 
 # specific data structure
@@ -177,7 +177,8 @@ if __name__ == "__main__":
     # normalize data to ease thetas optimization through gradient descent
     x_norm = normalize_xset(x_poly)
 
-    # switch back to dataframe and relabel columns to ease future use
+    # switch back to dataframe and relabel columns to ease feature selection
+    # during model training
     cols = ['w', 'w2', 'w3', 'w4', 'p', 'p2', 'p3', 'p4', 't', 't2', 't3',
             't4', 'wp', 'wp2', 'wp3', 'wp4', 'wt', 'wt2', 'wt3', 'wt4', 'pt',
             'pt2', 'pt3', 'pt4', 'wpt', 'wpt2', 'wpt3', 'wpt4']
@@ -280,7 +281,7 @@ if __name__ == "__main__":
                                't', 't2', 't3', 't4'])
 
     # all params, including combined, 1 degree
-    model = MyLR(np.random.rand(13, 1), alpha=alpha, max_iter=max_iter)
+    model = MyLR(np.random.rand(8, 1), alpha=alpha, max_iter=max_iter)
     save_model(models, model, ['w',
                                'p',
                                't',
@@ -290,7 +291,7 @@ if __name__ == "__main__":
                                'wpt',])
 
     # all params, including combined, 2 degrees
-    model = MyLR(np.random.rand(13, 1), alpha=alpha, max_iter=max_iter)
+    model = MyLR(np.random.rand(15, 1), alpha=alpha, max_iter=max_iter)
     save_model(models, model, ['w', 'w2',
                                'p', 'p2',
                                't', 't2',
@@ -300,7 +301,7 @@ if __name__ == "__main__":
                                'wpt', 'wpt2',])
 
     # all params, including combined, 3 degrees
-    model = MyLR(np.random.rand(13, 1), alpha=alpha, max_iter=max_iter)
+    model = MyLR(np.random.rand(22, 1), alpha=alpha, max_iter=max_iter)
     save_model(models, model, ['w', 'w2', 'w3',
                                'p', 'p2', 'p3',
                                't', 't2', 't3',
@@ -310,7 +311,7 @@ if __name__ == "__main__":
                                'wpt', 'wpt2', 'wpt3',])
 
     # all params, including combined, 4 degrees
-    model = MyLR(np.random.rand(13, 1), alpha=alpha, max_iter=max_iter)
+    model = MyLR(np.random.rand(29, 1), alpha=alpha, max_iter=max_iter)
     save_model(models, model, ['w', 'w2', 'w3', 'w4',
                                'p', 'p2', 'p3', 'p4',
                                't', 't2', 't3', 't4',
@@ -322,7 +323,7 @@ if __name__ == "__main__":
     # -------------------------------------------------------------------------
     # 4. Train models and store the loss
     # -------------------------------------------------------------------------
-    # multithreading for model training and loss calculation
+    # model training and loss calculation with multithreading
     for model in models:
         with concurrent.futures.ThreadPoolExecutor() as executor:
             executor.submit(train_model, model, df)
