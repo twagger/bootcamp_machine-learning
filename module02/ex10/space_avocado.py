@@ -4,6 +4,7 @@ of the different models into a file.
 In models.csv are the parameters of all the models I have explored and trained.
 """
 # general modules
+import sys
 import os
 import itertools
 import numpy as np
@@ -12,7 +13,6 @@ import csv
 import matplotlib.pyplot as plt
 
 # user modules
-import sys
 sys.path.insert(1, os.path.join(os.path.dirname(__file__), '..', 'ex09'))
 from data_spliter import data_spliter
 sys.path.insert(1, os.path.join(os.path.dirname(__file__), '..', 'ex07'))
@@ -21,7 +21,7 @@ sys.path.insert(1, os.path.join(os.path.dirname(__file__), '..', 'ex05'))
 from mylinearregression import MyLinearRegression as MyLR
 
 # Global params
-max_iter = 1000000
+max_iter = 1000
 alpha = 1e-1
 
 # specific data structure
@@ -38,40 +38,71 @@ class ModelWithInfos:
 # Data preparation functions
 def polynomial_matrix(x: np.ndarray, degree: int) -> np.ndarray:
     """return the polynomial matrix for x"""
-    x_ = np.empty((x.shape[0], 0))
-    for feature in range(x.shape[1]):
-        x_ = np.hstack((x_, add_polynomial_features(x[:, feature], degree)))
-    return x_
-
+    # type test
+    if not isinstance(degree, int):
+        print("Something went wrong", file=sys.stderr)
+        return None
+    try:
+        m, n = x.shape
+        x_ = np.empty((m, 0))
+        for feature in range(n):
+            x_ = np.hstack((x_, add_polynomial_features(x[:, feature], degree)))
+        return x_
+    except (ValueError, TypeError, AttributeError) as exc:
+        print(exc, file=sys.stderr)
+        return None
 
 def combined_features(x: np.ndarray, max: int = 2) -> np.ndarray:
     """
     return the combined features matrix for x where every feature is combined
     with each other feature to the maximum level of combination
     """
-    combined = np.copy(x)
-    for ii in range(2, max + 1):
-        # itertools to generate all unique combination (tuple) of columns
-        # I transpose x because itertools.combinations operates on rows
-        for subset in itertools.combinations(x.T, ii):
-            combined = np.c_[combined, np.prod(subset, axis=0)]
-    return combined
+    # type test
+    if not isinstance(max, int):
+        print("Something went wrong", file=sys.stderr)
+        return None
+    try:
+        combined = np.copy(x)
+        for ii in range(2, max + 1):
+            # itertools to generate all unique combination (tuple) of columns
+            # I transpose x because itertools.combinations operates on rows
+            for subset in itertools.combinations(x.T, ii):
+                combined = np.c_[combined, np.prod(subset, axis=0)]
+        return combined
+    except (AttributeError, ValueError, TypeError) as exc:
+        print(exc, file=sys.stderr)
+        return None
 
 
 def normalize_xset(x: np.ndarray) -> np.ndarray:
     """Normalize each feature an entire set of data"""
-    x_norm = np.empty((x.shape[0], 0))
-    for feature in range(x.shape[1]):
-        x_norm = np.hstack((x_norm, z_score(x[:, feature])))
-    return x_norm
+    try:
+        x_norm = np.empty((x.shape[0], 0))
+        for feature in range(x.shape[1]):
+            x_norm = np.hstack((x_norm, z_score(x[:, feature])))
+        return x_norm
+    except (AttributeError, TypeError) as exc:
+        print(exc, file=sys.stderr)
+        return None
 
 
 # Saving to file functions
 def save_training(writer, nb_model: int, form: str, thetas: np.ndarray,
                   alpha: float, max_iter: int, loss: float):
     """save the training in csv file"""
-    thetas_str = ','.join([f'{theta[0]}' for theta in thetas])
-    writer.writerow([nb_model, form, thetas_str, alpha, max_iter, loss])
+    # type check
+    if (not isinstance(nb_model, int) or not isinstance(form, str)
+            or not isinstance(thetas, np.ndarray)
+            or not isinstance(alpha, float) or not isinstance(max_iter, int)
+            or not isinstance(loss, float)):
+        print("Something went wrong", file=sys.stderr)
+        return None
+    try:
+        thetas_str = ','.join([f'{theta[0]}' for theta in thetas])
+        writer.writerow([nb_model, form, thetas_str, alpha, max_iter, loss])
+    except (AttributeError, TypeError, ValueError) as exc:
+        print(exc, file=sys.stderr)
+        return None
 
 
 # normalization function
@@ -103,26 +134,6 @@ def z_score(x: np.ndarray) -> np.ndarray:
     except (ValueError, TypeError, AttributeError) as exc:
         print(exc)
         return None
-
-
-# model training function to push it to multithreading
-def train_model(model: ModelWithInfos, df):
-    """Train the model and save information about its performance"""
-    # Select the subset of features associated with the model
-    features = model.features
-    X = np.array(df[features]).reshape((-1, len(features)))
-    # split function to produce X_train, X_test, y_train, y_test
-    X_train, X_test, y_train, y_test = data_spliter(X, y, 0.8)
-    # Train the model on 80% of the data
-    model.m.fit_(X_train, y_train)
-    # Test the model against 20% of the data and mesure the loss
-    model.loss = model.m.loss_(y_test, model.m.predict_(X_test))
-
-
-# misc tools
-def save_model(models: list, model: MyLR, features: list):
-    """save a model into a dictionnary of models"""
-    models.append(ModelWithInfos(m=model, features=features, loss=None))
 
 
 # main program
@@ -188,13 +199,15 @@ if __name__ == "__main__":
     models = []
 
     with open('models.csv', 'r') as file:
-        reader = csv.reader(file)
+        reader = csv.DictReader(file) # DictReader will skip the header row
         for row in reader:
-            thetas = np.array([float(theta) for theta in row[2].split(',')])
-            features = list([str(feat) for feat in row[1].split(',')])
-            model = MyLR(thetas, alpha=float(row[3]), max_iter=float(row[4]))
+            thetas = np.array([float(theta)
+                               for theta in row['thetas'].split(',')])
+            features = list([str(feat) for feat in row['features'].split(',')])
+            model = MyLR(thetas, alpha=float(row['alpha']),
+                         max_iter=int(row['max_iter']))
             models.append(ModelWithInfos(m=model, features=features,
-                                         loss=float(row[5])))
+                                         loss=float(row['loss'])))
 
     # -------------------------------------------------------------------------
     # 4. Train the best model (the last of the file)
@@ -202,7 +215,7 @@ if __name__ == "__main__":
     # pick the best model from the file
     best_model = models[-1]
     # clear the optimized the file and set a new random set of thetas
-    best_model.m.thetas = np.random.rand(len(best_model.thetas), 1)
+    best_model.m.thetas = np.random.rand(len(best_model.m.thetas), 1)
     best_model.loss = None
 
     # train the model with X_train
@@ -236,7 +249,7 @@ if __name__ == "__main__":
             label = 'Polynomial'
             color = 'red'
         else:
-            label = 'All (polynomial with all features, including combined)'
+            label = 'All (polynomial w/ all features, incl. combined)'
             color = 'orange'
         plt.scatter(ii, model.loss,
                     label=label if (ii == 0 or ii == 7 or ii == 14

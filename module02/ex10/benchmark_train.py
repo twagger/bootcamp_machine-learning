@@ -6,6 +6,7 @@ In models.csv are the parameters of all the models I have explored and trained.
 """
 # general modules
 import os
+import sys
 import itertools
 import concurrent.futures
 import numpy as np
@@ -14,7 +15,6 @@ import csv
 import matplotlib.pyplot as plt
 
 # user modules
-import sys
 sys.path.insert(1, os.path.join(os.path.dirname(__file__), '..', 'ex09'))
 from data_spliter import data_spliter
 sys.path.insert(1, os.path.join(os.path.dirname(__file__), '..', 'ex07'))
@@ -40,10 +40,19 @@ class ModelWithInfos:
 # Data preparation functions
 def polynomial_matrix(x: np.ndarray, degree: int) -> np.ndarray:
     """return the polynomial matrix for x"""
-    x_ = np.empty((x.shape[0], 0))
-    for feature in range(x.shape[1]):
-        x_ = np.hstack((x_, add_polynomial_features(x[:, feature], degree)))
-    return x_
+    # type test
+    if not isinstance(degree, int):
+        print("Something went wrong", file=sys.stderr)
+        return None
+    try:
+        m, n = x.shape
+        x_ = np.empty((m, 0))
+        for feature in range(n):
+            x_ = np.hstack((x_, add_polynomial_features(x[:, feature], degree)))
+        return x_
+    except (ValueError, TypeError, AttributeError) as exc:
+        print(exc, file=sys.stderr)
+        return None
 
 
 def combined_features(x: np.ndarray, max: int = 2) -> np.ndarray:
@@ -51,29 +60,52 @@ def combined_features(x: np.ndarray, max: int = 2) -> np.ndarray:
     return the combined features matrix for x where every feature is combined
     with each other feature to the maximum level of combination
     """
-    combined = np.copy(x)
-    for ii in range(2, max + 1):
-        # itertools to generate all unique combination (tuple) of columns
-        # I transpose x because itertools.combinations operates on rows
-        for subset in itertools.combinations(x.T, ii):
-            combined = np.c_[combined, np.prod(subset, axis=0)]
-    return combined
+    # type test
+    if not isinstance(max, int):
+        print("Something went wrong", file=sys.stderr)
+        return None
+    try:
+        combined = np.copy(x)
+        for ii in range(2, max + 1):
+            # itertools to generate all unique combination (tuple) of columns
+            # I transpose x because itertools.combinations operates on rows
+            for subset in itertools.combinations(x.T, ii):
+                combined = np.c_[combined, np.prod(subset, axis=0)]
+        return combined
+    except (AttributeError, ValueError, TypeError) as exc:
+        print(exc, file=sys.stderr)
+        return None
 
 
 def normalize_xset(x: np.ndarray) -> np.ndarray:
     """Normalize each feature an entire set of data"""
-    x_norm = np.empty((x.shape[0], 0))
-    for feature in range(x.shape[1]):
-        x_norm = np.hstack((x_norm, z_score(x[:, feature])))
-    return x_norm
+    try:
+        x_norm = np.empty((x.shape[0], 0))
+        for feature in range(x.shape[1]):
+            x_norm = np.hstack((x_norm, z_score(x[:, feature])))
+        return x_norm
+    except (AttributeError, TypeError) as exc:
+        print(exc, file=sys.stderr)
+        return None
 
 
 # Saving to file functions
 def save_training(writer, nb_model: int, form: str, thetas: np.ndarray,
                   alpha: float, max_iter: int, loss: float):
     """save the training in csv file"""
-    thetas_str = ','.join([f'{theta[0]}' for theta in thetas])
-    writer.writerow([nb_model, form, thetas_str, alpha, max_iter, loss])
+    # type check
+    if (not isinstance(nb_model, int) or not isinstance(form, str)
+            or not isinstance(thetas, np.ndarray)
+            or not isinstance(alpha, float) or not isinstance(max_iter, int)
+            or not isinstance(loss, float)):
+        print("Something went wrong", file=sys.stderr)
+        return None
+    try:
+        thetas_str = ','.join([f'{theta[0]}' for theta in thetas])
+        writer.writerow([nb_model, form, thetas_str, alpha, max_iter, loss])
+    except (AttributeError, TypeError, ValueError) as exc:
+        print(exc, file=sys.stderr)
+        return None
 
 
 # normalization function
@@ -92,7 +124,7 @@ def z_score(x: np.ndarray) -> np.ndarray:
     try:
         # type test
         if not isinstance(x, np.ndarray):
-            print("Something went wrong")
+            print("Something went wrong", file=sys.stderr)
             return None
         # shape test
         x = x.reshape((-1, 1))
@@ -103,29 +135,36 @@ def z_score(x: np.ndarray) -> np.ndarray:
         return x_prime
 
     except (ValueError, TypeError, AttributeError) as exc:
-        print(exc)
+        print(exc, file=sys.stderr)
         return None
 
 
 # model training function to push it to multithreading
 def train_model(model: ModelWithInfos, df):
     """Train the model and save information about its performance"""
-    # Select the subset of features associated with the model
-    features = model.features
-    X = np.array(df[features]).reshape((-1, len(features)))
-    # split function to produce X_train, X_test, y_train, y_test
-    X_train, X_test, y_train, y_test = data_spliter(X, y, 0.8)
-    # Train the model on 80% of the data
-    model.m.fit_(X_train, y_train)
-    # Test the model against 20% of the data and mesure the loss
-    model.loss = model.m.loss_(y_test, model.m.predict_(X_test))
+    try:
+        # Select the subset of features associated with the model
+        features = model.features
+        X = np.array(df[features]).reshape((-1, len(features)))
+        # split function to produce X_train, X_test, y_train, y_test
+        X_train, X_test, y_train, y_test = data_spliter(X, y, 0.8)
+        # Train the model on 80% of the data
+        model.m.fit_(X_train, y_train)
+        # Test the model against 20% of the data and mesure the loss
+        model.loss = model.m.loss_(y_test, model.m.predict_(X_test))
+    except (TypeError, AttributeError, ValueError) as exc:
+        print(exc, file=sys.stderr)
 
 
 # misc tools
 def save_model(models: list, model: MyLR, features: list):
     """save a model into a dictionnary of models"""
-    feat_str = ",".join([f'{feat}' for feat in features])
-    models.append(ModelWithInfos(m=model, features=feat_str, loss=None))
+    # type check
+    if (not isinstance(models, list) or not isinstance(model, MyLR)
+            or not isinstance(features, list)):
+        print("Something went wrong", file=sys.stderr)
+    else:
+        models.append(ModelWithInfos(m=model, features=features, loss=None))
 
 
 # main program
@@ -188,6 +227,12 @@ if __name__ == "__main__":
     # -------------------------------------------------------------------------
     # 3. Create models : from basic to complex combination of features
     # -------------------------------------------------------------------------
+    # Here I check a lot of explicit model forms instead of just one polynomial
+    # because I want to have a view of the performance of each "kind" of model.
+    # It allows me to display performance of simple models, models with
+    # combined features and polynomial models for this dataset.
+    # In real life, the gradient descent will minimize the parameters with low
+    # impact on the prediction.
     models = []
 
     # BASIC
@@ -340,7 +385,8 @@ if __name__ == "__main__":
 
         for ii, model in enumerate(models):
             # saving parameters and results in the models.csv file
-            save_training(writer, ii, model.features, model.m.thetas, alpha,
+            feat_str = ",".join([f'{feat}' for feat in model.features])
+            save_training(writer, ii, feat_str, model.m.thetas, alpha,
                           max_iter, model.loss)
 
     # -------------------------------------------------------------------------
@@ -375,9 +421,10 @@ if __name__ == "__main__":
     the_model = min(models, key=lambda x: x.loss)
 
     # save it as last in the models.csv file to be retrieved by space avocado
-    with open('models.csv', 'w') as file:
+    with open('models.csv', 'a') as file:
         writer = csv.writer(file)
-        save_training(writer, ii, the_model.features, the_model.m.thetas,
+        feat_str = ",".join([f'{feat}' for feat in the_model.features])
+        save_training(writer, 9999, feat_str, the_model.m.thetas,
                       alpha, max_iter, the_model.loss)
 
     # plot 3 scatter plots : prediction vs true price

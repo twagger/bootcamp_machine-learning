@@ -3,43 +3,6 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# x = np.arange(1,11).reshape(-1,1)
-# y = np.array([[ 1.39270298],
-#               [ 3.88237651],
-#               [ 4.37726357],
-#               [ 4.63389049],
-#               [ 7.79814439],
-#               [ 6.41717461],
-#               [ 8.63429886],
-#               [ 8.19939795],
-#               [10.37567392],
-#               [10.68238222]])
-
-# plt.scatter(x,y)
-# plt.show()
-
-# # imports
-# import sys
-# sys.path.insert(1, '../ex06/')
-# from polynomial_model import add_polynomial_features
-# sys.path.insert(1, '../ex04/')
-# from mylinearregression import MyLinearRegression as MyLR
-
-# # Build the model:
-# x_ = add_polynomial_features(x, 3)
-# my_lr = MyLR(np.ones(4).reshape(-1,1), alpha = 2.5e-6, max_iter = 100000)
-
-# # Fit the model
-# my_lr.fit_(x_, y)
-
-# # Plot:
-# ## To get a smooth curve, we need a lot of data points
-# continuous_x = np.arange(1, 10.01, 0.01).reshape(-1,1)
-# x_ = add_polynomial_features(continuous_x, 3)
-# y_hat = my_lr.predict_(x_)
-# plt.scatter(x, y)
-# plt.plot(continuous_x, y_hat, color='orange')
-# plt.show()
 
 if __name__ == "__main__":
 
@@ -52,8 +15,8 @@ if __name__ == "__main__":
 
     # Reads and loads are_blue_pills_magics.csv dataset
     data = pd.read_csv("./are_blue_pills_magics.csv")
-    X = np.array(data['Micrograms']).reshape((-1, 1))
-    Y = np.array(data['Score']).reshape((-1, 1))
+    x = np.array(data['Micrograms']).reshape((-1, 1))
+    y = np.array(data['Score']).reshape((-1, 1))
 
     # Trains six separate Linear Regression models with polynomial hypothesis
     # with degrees ranging from 1 to 6
@@ -83,15 +46,15 @@ if __name__ == "__main__":
             max_iter = 1000000
 
         # add polynomial data
-        x_ = add_polynomial_features(X, degree)
+        x_ = add_polynomial_features(x, degree)
         # create the model
         my_lr = MyLR(theta, alpha = alpha, max_iter = max_iter)
         # fit the model
-        my_lr.fit_(x_, Y)
+        my_lr.fit_(x_, y)
         # predict
         y_hat = my_lr.predict_(x_)
         # Evaluates and prints evaluation score (MSE) of each of the six models
-        mse = my_lr.mse_(Y, y_hat)
+        mse = my_lr.mse_(y, y_hat)
         mse_data.append(mse)
         print(f'mse for polynomial model of degree {degree}: {mse}')
         # saving parameters to reproduce the models for plotting
@@ -116,7 +79,7 @@ if __name__ == "__main__":
     # Add more prediction points to have smooth curves for the models.
     plt.figure()
     plt.title('All hypothesis against training dataset')
-    plt.scatter(X, Y)
+    plt.scatter(x, y)
     plt.xlabel('Micrograms')
     plt.ylabel('Score')
     # loop for each hypothesis

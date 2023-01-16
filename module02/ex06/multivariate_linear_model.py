@@ -1,4 +1,5 @@
 """Multivariate linear model"""
+import sys
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -13,12 +14,16 @@ class MyLinearRegression():
     def __init__(self, thetas: np.ndarray, alpha: float = 0.001,
                  max_iter: int = 1000):
         """Constructor"""
-        self.alpha = alpha
-        self.max_iter = max_iter
-        try:
-            self.thetas = np.array(thetas).reshape((-1, 1))
-        except (ValueError, TypeError, AttributeError) as exc:
-            print(exc)
+        # type test
+        if not isinstance(alpha, float) or not isinstance(max_iter, int):
+            print('Something went wrong', file=sys.stderr)
+        else:
+            self.alpha = alpha
+            self.max_iter = max_iter
+            try:
+                self.thetas = np.array(thetas).reshape((-1, 1))
+            except (ValueError, TypeError, AttributeError) as exc:
+                print(exc, file=sys.stderr)
 
     def predict_(self, x: np.ndarray) -> np.ndarray:
         """
@@ -36,11 +41,12 @@ class MyLinearRegression():
         try:
             # shape
             x = x.reshape((-1, 1))
+            m, _ = x.shape
             # creation of the prediction matrix
-            x_prime = np.hstack((np.ones((x.shape[0], 1)), x))
+            x_prime = np.hstack((np.ones((m, 1)), x))
             return x_prime.dot(self.thetas)
         except (TypeError, ValueError, AttributeError) as exc:
-            print(exc)
+            print(exc, file=sys.stderr)
             return None
 
     def loss_elem_(self, y: np.ndarray, y_hat: np.ndarray) -> np.ndarray:
@@ -65,7 +71,8 @@ class MyLinearRegression():
             y_hat = y_hat.reshape((-1, 1))
             # calculation
             return (y_hat - y) ** 2
-        except (ValueError, TypeError, AttributeError):
+        except (ValueError, TypeError, AttributeError) as exc:
+            print(exc, file=sys.stderr)
             return None
 
     def loss_(self, y: np.ndarray, y_hat: np.ndarray) -> float:
@@ -86,7 +93,8 @@ class MyLinearRegression():
         try:
             loss_vector = self.loss_elem_(y, y_hat)
             return float(np.sum(loss_vector) / (2 * len(y)))
-        except (ValueError, TypeError, AttributeError):
+        except (ValueError, TypeError, AttributeError) as exc:
+            print(exc, file=sys.stderr)
             return None
 
     def mse_(self, y: np.ndarray, y_hat: np.ndarray) -> float:
@@ -107,7 +115,8 @@ class MyLinearRegression():
         try:
            loss_vector = self.loss_elem_(y, y_hat)
            return float(np.sum(loss_vector) / len(y))
-        except (ValueError, TypeError, AttributeError):
+        except (ValueError, TypeError, AttributeError) as exc:
+            print(exc, file=sys.stderr)
             return None
 
     def fit_(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
@@ -130,8 +139,8 @@ class MyLinearRegression():
             x = x.reshape((-1, 1))
             y = y.reshape((-1, 1))
             # 0. add intercept
-            m = x.shape[0]
-            x_prime = np.hstack((np.ones((x.shape[0], 1)), x))
+            m, _ = x.shape
+            x_prime = np.hstack((np.ones((m, 1)), x))
             # 1. loop
             for _ in range(self.max_iter):
                 # 2. calculate the gradient for current thetas
@@ -141,7 +150,8 @@ class MyLinearRegression():
                 self.thetas[0][0] -= self.alpha * gradient[0][0]
                 self.thetas[1][0] -= self.alpha * gradient[1][0]
             return self.thetas
-        except (ValueError, TypeError, AttributeError):
+        except (ValueError, TypeError, AttributeError) as exc:
+            print(exc, file=sys.stderr)
             return None
 
 # end of univariate linear regression class
@@ -198,13 +208,12 @@ if __name__ == "__main__":
         print(f'Final thetas for {feature}:\n{myLR_feat.thetas}\n')
 
         # Output
-        # 55736.86719... > This is a big error :(
+        # 55736.86719... > This is a big error for this dataset :(
 
 
     # MULTIVARIATE
     
     # import class
-    import sys
     sys.path.insert(1, '../ex05/')
     from mylinearregression import MyLinearRegression as mlr_multi
 

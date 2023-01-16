@@ -1,4 +1,5 @@
 """Prediction module"""
+import sys
 import numpy as np
 
 
@@ -19,15 +20,17 @@ def simple_predict(x: np.ndarray, theta: np.ndarray):
     try:
         # type test
         if not isinstance(x, np.ndarray) or not isinstance(theta, np.ndarray):
-            print('Something went wrong')
+            print('Something went wrong', file=sys.stderr)
             return None
         # shape test
+        m, n = x.shape
         theta = theta.reshape(-1, 1)
-        if x.shape[1] != theta.shape[0] - 1:
-            print('Something went wrong')
+        if theta.shape[0] != n + 1:
+            print('Something went wrong', file=sys.stderr)
             return None
         # calculation WITHOUT linear algrebra trick
-        x_prime = np.zeros((x.shape[0], 1))
+        x_prime = np.zeros((m, 1))
+        del m, n
         for m in range(x.shape[0]):
             x_prime[m][0] = theta[0]
             for n in range(x.shape[1]):
@@ -35,7 +38,7 @@ def simple_predict(x: np.ndarray, theta: np.ndarray):
         return x_prime
 
     except (ValueError, TypeError, AttributeError) as exc:
-        print(exc)
+        print(exc, file=sys.stderr)
         return None
 
 

@@ -1,4 +1,5 @@
 """My Linear Regression Module"""
+import sys
 import numpy as np
 
 
@@ -11,12 +12,16 @@ class MyLinearRegression():
     def __init__(self, thetas: np.ndarray, alpha: float = 0.001,
                  max_iter: int = 1000):
         """Constructor"""
-        self.alpha = alpha
-        self.max_iter = max_iter
-        try:
-            self.thetas = np.array(thetas).reshape((-1, 1))
-        except (ValueError, TypeError, AttributeError) as exc:
-            print(exc)
+        # type test
+        if not isinstance(alpha, float) or not isinstance(max_iter, int):
+            print('Something went wrong', file=sys.stderr)
+        else:
+            self.alpha = alpha
+            self.max_iter = max_iter
+            try:
+                self.thetas = np.array(thetas).reshape((-1, 1))
+            except (ValueError, TypeError, AttributeError) as exc:
+                print(exc, file=sys.stderr)
 
     def predict_(self, x: np.ndarray) -> np.ndarray:
         """
@@ -32,11 +37,19 @@ class MyLinearRegression():
             This function should not raise any Exceptions.
         """
         try:
-            m = x.shape[0]
+            # type test
+            if not isinstance(x, np.ndarray):
+                print('Something went wrong', file=sys.stderr)
+                return None
+            # shape test
+            m, n = x.shape
+            if self.thetas.shape[0] != n + 1:
+                print('Something went wrong', file=sys.stderr)
+                return None
             x_prime = np.c_[np.ones((m, 1)), x]
             return x_prime.dot(self.thetas)
         except (ValueError, TypeError, AttributeError) as exc:
-            print(exc)
+            print(exc, file=sys.stderr)
             return None
 
     def loss_elem_(self, y: np.ndarray, y_hat: np.ndarray) -> np.ndarray:
@@ -59,7 +72,8 @@ class MyLinearRegression():
             y = y.reshape((-1, 1))
             y_hat = y_hat.reshape((-1, 1))
             return (y_hat - y) ** 2
-        except (ValueError, TypeError, AttributeError):
+        except (ValueError, TypeError, AttributeError) as exc:
+            print(exc, file=sys.stderr)
             return None
 
     def loss_(self, y: np.ndarray, y_hat: np.ndarray) -> float:
@@ -80,9 +94,10 @@ class MyLinearRegression():
         try:
             y = y.reshape((-1, 1))
             y_hat = y_hat.reshape((-1, 1))
-            m = y.shape[0]
+            m, _ = y.shape
             return float((((y_hat - y).T.dot(y_hat - y)) / (2 * m))[0][0])
-        except (ValueError, TypeError, AttributeError):
+        except (ValueError, TypeError, AttributeError) as exc:
+            print(exc, file=sys.stderr)
             return None
 
     def mse_(self, y: np.ndarray, y_hat: np.ndarray) -> float:
@@ -105,9 +120,10 @@ class MyLinearRegression():
             y = y.reshape((-1, 1))
             y_hat = y_hat.reshape((-1, 1))
             # calculation
-            m = y.shape[0]
+            m, _ = y.shape
             return float((((y_hat - y).T.dot(y_hat - y)) / (m))[0][0])
-        except (ValueError, TypeError, AttributeError):
+        except (ValueError, TypeError, AttributeError) as exc:
+            print(exc, file=sys.stderr)
             return None
 
     def fit_(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
@@ -127,12 +143,12 @@ class MyLinearRegression():
         """
         try:
             # shape test
-            if (x.shape[0] != y.shape[0] or y.shape[1] != 1):
-                print('Error: wrong shape on parameter(s)')
+            m, _ = x.shape
+            if (y.shape[0] != m or y.shape[1] != 1):
+                print('Error: wrong shape on parameter(s)', file=sys.stderr)
                 return None
             # calculation of the gradient vector
             # 1. X to X'
-            m = x.shape[0]
             x_prime = np.c_[np.ones((m, 1)), x]
             # 2. loop
             for _ in range(self.max_iter):
@@ -142,7 +158,7 @@ class MyLinearRegression():
                 self.thetas -= self.alpha * gradient
             return self.thetas
         except (ValueError, TypeError, AttributeError) as exc:
-            print(exc)
+            print(exc, file=sys.stderr)
             return None
 
 

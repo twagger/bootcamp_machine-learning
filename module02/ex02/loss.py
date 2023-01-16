@@ -1,4 +1,5 @@
 """Loss module"""
+import sys
 import numpy as np
 
 
@@ -19,12 +20,14 @@ def loss_(y: np.ndarray, y_hat: np.ndarray) -> float:
     """
     try:
         # shapes
+        m, _ = y.shape
         y = y.reshape((-1, 1))
         y_hat = y_hat.reshape((-1, 1))
         # calculation
-        return float((((y_hat - y).T.dot(y_hat - y))
-                        / (2 * y.shape[0]))[0][0])
-    except (ValueError, TypeError, AttributeError):
+        return float((((y_hat - y).T.dot(y_hat - y)) / (2 * m))[0][0])
+
+    except (ValueError, TypeError, AttributeError) as exc:
+        print(exc, file=sys.stderr)
         return None
 
 

@@ -1,4 +1,5 @@
 """Gradient module"""
+import sys
 import numpy as np
 
 
@@ -22,17 +23,18 @@ def gradient(x: np.ndarray, y: np.ndarray, theta: np.ndarray) -> np.ndarray:
     """
     try:
         # shape test
-        if (x.shape[0] != y.shape[0] or y.shape[1] != 1
-                or theta.shape[0] != x.shape[1] + 1
+        m, n = x.shape
+        if (y.shape[0] != m or y.shape[1] != 1
+                or theta.shape[0] != n + 1
                 or theta.shape[1] != 1):
-            print('Error: wrong shape on parameter(s)')
+            print('Error: wrong shape on parameter(s)', file=sys.stderr)
             return None
         # calculation of the gradient vector
-        m = x.shape[0]
         x_prime = np.c_[np.ones((m, 1)), x]
         return x_prime.T.dot(x_prime.dot(theta) - y) / m
+    
     except (ValueError, TypeError, AttributeError) as exc:
-        print(exc)
+        print(exc, file=sys.stderr)
         return None
 
 

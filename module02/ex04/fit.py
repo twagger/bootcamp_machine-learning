@@ -1,4 +1,5 @@
 """Fit module"""
+import sys
 import numpy as np
 
 
@@ -26,14 +27,14 @@ def fit_(x: np.ndarray, y: np.ndarray, theta: np.ndarray, alpha: float,
     """
     try:
         # shape test
-        if (x.shape[0] != y.shape[0] or y.shape[1] != 1
-                or theta.shape[0] != x.shape[1] + 1
+        m, n = x.shape
+        if (y.shape[0] != m or y.shape[1] != 1
+                or theta.shape[0] != n + 1
                 or theta.shape[1] != 1):
-            print('Error: wrong shape on parameter(s)')
+            print('Error: wrong shape on parameter(s)', file=sys.stderr)
             return None
         # calculation of the gradient vecto
         # 1. X to X'
-        m = x.shape[0]
         x_prime = np.hstack((np.ones((m, 1)), x))
         # 2. loop
         for _ in range(max_iter):
@@ -42,14 +43,14 @@ def fit_(x: np.ndarray, y: np.ndarray, theta: np.ndarray, alpha: float,
             # 4. calculate and assign the new thetas all in once with vector
             theta -= alpha * gradient
         return theta
+
     except (ValueError, TypeError, AttributeError) as exc:
-        print(exc)
+        print(exc, file=sys.stderr)
         return None
 
 
 if __name__ == "__main__":
 
-    import sys
     sys.path.insert(1, '../ex01/')
     from prediction import predict_
 
