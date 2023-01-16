@@ -23,7 +23,7 @@ sys.path.insert(1, os.path.join(os.path.dirname(__file__), '..', 'ex05'))
 from mylinearregression import MyLinearRegression as MyLR
 
 # Global params
-max_iter = 1000000
+max_iter = 100000
 alpha = 1e-1
 
 # specific data structure
@@ -91,7 +91,7 @@ def normalize_xset(x: np.ndarray) -> np.ndarray:
 
 # Saving to file functions
 def save_training(writer, nb_model: int, form: str, thetas: np.ndarray,
-                  alpha: float, max_iter: int, loss: float):
+                  alpha: float, max_iter: int, loss: float, train_loss: float):
     """save the training in csv file"""
     # type check
     if (not isinstance(nb_model, int) or not isinstance(form, str)
@@ -102,7 +102,8 @@ def save_training(writer, nb_model: int, form: str, thetas: np.ndarray,
         return None
     try:
         thetas_str = ','.join([f'{theta[0]}' for theta in thetas])
-        writer.writerow([nb_model, form, thetas_str, alpha, max_iter, loss])
+        writer.writerow([nb_model, form, thetas_str, alpha, max_iter, loss,
+                         train_loss])
     except (AttributeError, TypeError, ValueError) as exc:
         print(exc, file=sys.stderr)
         return None
@@ -151,6 +152,7 @@ def train_model(model: ModelWithInfos, df):
         # Train the model on 80% of the data
         model.m.fit_(X_train, y_train)
         # Test the model against 20% of the data and mesure the loss
+        model.train_loss = model.m.loss_(y_train, model.m.predict_(X_train))
         model.loss = model.m.loss_(y_test, model.m.predict_(X_test))
     except (TypeError, AttributeError, ValueError) as exc:
         print(exc, file=sys.stderr)
@@ -164,7 +166,8 @@ def save_model(models: list, model: MyLR, features: list):
             or not isinstance(features, list)):
         print("Something went wrong", file=sys.stderr)
     else:
-        models.append(ModelWithInfos(m=model, features=features, loss=None))
+        models.append(ModelWithInfos(m=model, features=features, loss=None,
+                                     train_loss=None))
 
 
 # main program
@@ -381,13 +384,13 @@ if __name__ == "__main__":
     with open('models.csv', 'w') as file:
         writer = csv.writer(file)
         writer.writerow(["model", "features", "thetas", "alpha", "max_iter",
-                         "loss"])
+                         "loss", "train_loss"])
 
         for ii, model in enumerate(models):
             # saving parameters and results in the models.csv file
             feat_str = ",".join([f'{feat}' for feat in model.features])
             save_training(writer, ii, feat_str, model.m.thetas, alpha,
-                          max_iter, model.loss)
+                          max_iter, model.loss, model.train_loss)
 
     # -------------------------------------------------------------------------
     # 6. Plot all model's loss and pick best model for space avocado
@@ -409,12 +412,24 @@ if __name__ == "__main__":
             label = 'Polynomial'
             color = 'red'
         else:
-            label = 'All (polynomial with all features, including combined)'
+            label = 'All (polynomial w/ all features, incl. combined)'
             color = 'orange'
         plt.scatter(ii, model.loss,
                     label=label if (ii == 0 or ii == 7 or ii == 14
                                     or ii == 35) else None, c=color)
     plt.legend()
+    plt.show()
+
+    # plot the differences between train loss and test loss to check if models
+    # are overfitting
+    plt.figure()
+    plt.title('Difference between train and test set on global loss '
+              '(positive = the model is better in training / Negative = '
+              'the model is better in test')
+    plt.xlabel('Model')
+    plt.ylabel('Difference between train and test set on loss')
+    for ii, model in enumerate(models):
+        plt.bar(ii, model.loss - model.train_loss)
     plt.show()
 
     # pick the model with the minimum loss
@@ -425,7 +440,7 @@ if __name__ == "__main__":
         writer = csv.writer(file)
         feat_str = ",".join([f'{feat}' for feat in the_model.features])
         save_training(writer, 9999, feat_str, the_model.m.thetas,
-                      alpha, max_iter, the_model.loss)
+                      alpha, max_iter, the_model.loss, the_model.train_loss)
 
     # plot 3 scatter plots : prediction vs true price
     y_hat = the_model.m.predict_(df[the_model.features].to_numpy())

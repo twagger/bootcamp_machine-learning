@@ -21,7 +21,7 @@ sys.path.insert(1, os.path.join(os.path.dirname(__file__), '..', 'ex05'))
 from mylinearregression import MyLinearRegression as MyLR
 
 # Global params
-max_iter = 1000
+max_iter = 1000000
 alpha = 1e-1
 
 # specific data structure
@@ -199,7 +199,7 @@ if __name__ == "__main__":
     models = []
 
     with open('models.csv', 'r') as file:
-        reader = csv.DictReader(file) # DictReader will skip the header row
+        reader = csv.DictReader(file) # DictRader will skip the header row
         for row in reader:
             thetas = np.array([float(theta)
                                for theta in row['thetas'].split(',')])
@@ -207,16 +207,20 @@ if __name__ == "__main__":
             model = MyLR(thetas, alpha=float(row['alpha']),
                          max_iter=int(row['max_iter']))
             models.append(ModelWithInfos(m=model, features=features,
-                                         loss=float(row['loss'])))
+                                         loss=float(row['loss']),
+                                         train_loss=float(row['train_loss'])))
 
     # -------------------------------------------------------------------------
     # 4. Train the best model (the last of the file)
     # -------------------------------------------------------------------------
     # pick the best model from the file
     best_model = models[-1]
-    # clear the optimized the file and set a new random set of thetas
+    # update the model hyperparameters for a new training from scratch
     best_model.m.thetas = np.random.rand(len(best_model.m.thetas), 1)
+    best_model.m.alpha = alpha
+    best_model.m.max_iter = max_iter
     best_model.loss = None
+    best_model.train_loss = None
 
     # train the model with X_train
     features = best_model.features
@@ -255,6 +259,18 @@ if __name__ == "__main__":
                     label=label if (ii == 0 or ii == 7 or ii == 14
                                     or ii == 35) else None, c=color)
     plt.legend()
+    plt.show()
+
+    # plot the differences between train loss and test loss to check if models
+    # are overfitting
+    plt.figure()
+    plt.title('Difference between train and test set on global loss '
+              '(positive = the model is better in training / Negative = '
+              'the model is better in test')
+    plt.xlabel('Model')
+    plt.ylabel('Difference between train and test set on loss')
+    for ii, model in enumerate(models[:-1]):
+        plt.bar(ii, model.loss - model.train_loss)
     plt.show()
 
     # plot 3 scatter plots : prediction vs true price
