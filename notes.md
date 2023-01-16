@@ -3,15 +3,16 @@
 Notes complétées au fur et à mesure pour bien mémoriser les différents concepts.
 
 # Index des notes
-1. [Regression linéaire](#regression-linéaire)
+1. [Régression linéaire](#régression-linéaire)
 	- [Monovaluée: ajustement affine avec une feature](#monovaluée-ajustement-affine-avec-une-feature)
 	    - [Entrainement sur un modele linéaire monovalué](#entrainement-sur-un-modele-linéaire-monovalué)
         - [Fonction coût](#fonction-coût)
         - [Optimisation des paramètres par l'algorithme de la descente de gradient](#optimisation-des-paramètres-par-algorithme-de-la-descente-de-gradient)
     - [Algebre linéaire](#algebre-linéaire)
     - [Multivaluée: ajustement affine avec plusieurs features](#multivaluée-ajustement-affine-avec-plusieurs-features)
+2. [Régression logistique](#régression-logistique)
 
-# Regression linéaire
+# Régression linéaire
 
 Un modèle de regression linéaire est un modèle qui cherche a établir une relation linéaire entre une variable, dite "expliquée" et une ou plusieurs variables, dites "explicatives".
 
@@ -152,6 +153,8 @@ Lors d'une descente de gradient sur une régression polynomiale, on va donner pl
 
 La descente de gradient va permettre de sélectionner pour nous les meilleures features en abaissant le poids des features de faible importance et en montant le poids des features dont l'ajustement permet le mieux de réduire le coût de la prédiction sur les données d'entrainement.
 
+On va créer une Matrice de Vandermonde dans le cadre de l'interpolation polynomiale (interpolation d'un ensemble de données ou d'une fonction par un polynôme)
+
 # Bibliothèques
 
 Principales bibliothèques et fonctions associées pour la régression linéaire.
@@ -168,3 +171,31 @@ X_norm = scaler.fit_transform(X_train)
 train model :
 sgdr = SGDRegressor(max_iter=1000)
 sgdr.fit(X_norm, y_train)
+
+### Sélectionner les meilleures features pour un modèle
+
+Common Ways to Find the Best Combination of Features with Linear Regression
+There are several common ways to find the best combination of features to use while training a machine learning model with linear regression, some of which include:
+
+1. Forward Selection: Start with an empty set of features and add one feature at a time until a stopping criterion is met.
+
+2. Backward Elimination: Start with all the features and remove one at a time until a stopping criterion is met.
+
+3. Recursive Feature Elimination (RFE): Recursively remove features, building the model with the remaining features. Use the feature importance attribute of the model to rank the features and eliminate the least important ones.
+
+4. Lasso Regression: Lasso Regression (Least Absolute Shrinkage and Selection Operator) is a regularization method that tries to force some of the coefficients to be exactly equal to zero. It can be used as a feature selection method, since the features that are not important for the prediction will have a zero coefficient in the final model.
+
+5. Ridge Regression : Similar to Lasso, Ridge uses the L2 regularization term which will shrink the coefficient of less important feature but unlike Lasso it never makes the coefficient exactly 0.
+
+6. Random Forest : Random Forest provides a feature importance attribute which can be used to select the most important features to use in the linear regression model.
+
+# Régression logistique
+
+La régression logistique permet de traiter des problèmes de classification. La régression logistique va permettre de prédire une probabilité qu'une donnée appartient à une classe / catégorie.
+
+On défini géneralement un seul au delà duquel la donnée est identifiée comme appartenant à une classe.
+
+
+# Pérenisation
+
+La pérennisation dans l'apprentissage automatique est le processus par lequel un modèle d'apprentissage automatique est conçu pour continuer à fonctionner de manière efficace sur des données en constante évolution. Cela implique généralement de prendre en compte les tendances changeantes dans les données, de s'assurer que le modèle reste robuste face aux données aberrantes, et d'adapter le modèle aux nouvelles données pour éviter l'overfitting. La pérennisation est souvent utilisée pour les modèles d'apprentissage automatique qui sont utilisés en production pour des tâches telles que la prédiction de la maintenance préventive, la détection de fraudes et la reconnaissance de la parole.

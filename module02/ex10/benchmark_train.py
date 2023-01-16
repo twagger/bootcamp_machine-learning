@@ -72,7 +72,7 @@ def normalize_xset(x: np.ndarray) -> np.ndarray:
 def save_training(writer, nb_model: int, form: str, thetas: np.ndarray,
                   alpha: float, max_iter: int, loss: float):
     """save the training in csv file"""
-    thetas_str = ','.join([f'[{theta[0]}]' for theta in thetas])
+    thetas_str = ','.join([f'{theta[0]}' for theta in thetas])
     writer.writerow([nb_model, form, thetas_str, alpha, max_iter, loss])
 
 
@@ -124,7 +124,8 @@ def train_model(model: ModelWithInfos, df):
 # misc tools
 def save_model(models: list, model: MyLR, features: list):
     """save a model into a dictionnary of models"""
-    models.append(ModelWithInfos(m=model, features=features, loss=None))
+    feat_str = ",".join([f'{feat}' for feat in features])
+    models.append(ModelWithInfos(m=model, features=feat_str, loss=None))
 
 
 # main program
@@ -343,8 +344,61 @@ if __name__ == "__main__":
                           max_iter, model.loss)
 
     # -------------------------------------------------------------------------
-    # 6. Pick best model for space avocado
+    # 6. Plot all model's loss and pick best model for space avocado
     # -------------------------------------------------------------------------
-    # plot different graphs to compare models
+    # plot one graph to compare models (mse per model)
+    plt.figure()
+    plt.title('Loss per model')
+    plt.xlabel('Model')
+    plt.ylabel('Loss')
+    for ii, model in enumerate(models):
+        # group models so it is understandable
+        if ii < 7:
+            label = 'Basic'
+            color = 'blue'
+        elif ii < 14:
+            label = 'Combined'
+            color = 'green'
+        elif ii < 35:
+            label = 'Polynomial'
+            color = 'red'
+        else:
+            label = 'All (polynomial with all features, including combined)'
+            color = 'orange'
+        plt.scatter(ii, model.loss,
+                    label=label if (ii == 0 or ii == 7 or ii == 14
+                                    or ii == 35) else None, c=color)
+    plt.legend()
+    plt.show()
 
     # pick the model with the minimum loss
+    the_model = min(models, key=lambda x: x.loss)
+
+    # save it as last in the models.csv file to be retrieved by space avocado
+    with open('models.csv', 'w') as file:
+        writer = csv.writer(file)
+        save_training(writer, ii, the_model.features, the_model.m.thetas,
+                      alpha, max_iter, the_model.loss)
+
+    # plot 3 scatter plots : prediction vs true price
+    y_hat = the_model.m.predict_(df[the_model.features].to_numpy())
+    plt.figure()
+    plt.title('Prediction versus true price')
+    plt.ylabel('Price')
+    plt.subplot(1,3,1)
+    plt.xlabel('Weight')
+    plt.scatter(np.array(df['w']).reshape((-1, 1)), y, label='True')
+    plt.scatter(np.array(df['w']).reshape((-1, 1)), y_hat, label='Predicted',
+                marker='x')
+    plt.subplot(1,3,2)
+    plt.xlabel('Production distance')
+    plt.scatter(np.array(df['p']).reshape((-1, 1)), y, label='True')
+    plt.scatter(np.array(df['p']).reshape((-1, 1)), y_hat, label='Predicted',
+                marker='x')
+    plt.subplot(1,3,3)
+    plt.xlabel('Time delivery')
+    plt.scatter(np.array(df['t']).reshape((-1, 1)), y, label='True')
+    plt.scatter(np.array(df['t']).reshape((-1, 1)), y_hat, label='Predicted',
+                marker='x')
+    plt.legend()
+    plt.show()
