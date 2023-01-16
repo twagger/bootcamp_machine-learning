@@ -14,7 +14,11 @@ if __name__ == "__main__":
     from mylinearregression import MyLinearRegression as MyLR
 
     # Reads and loads are_blue_pills_magics.csv dataset
-    data = pd.read_csv("./are_blue_pills_magics.csv")
+    try:
+        data = pd.read_csv("./are_blue_pills_magics.csv")
+    except:
+        print("Error when trying to read dataset", file=sys.stderr)
+        sys.exit()
     x = np.array(data['Micrograms']).reshape((-1, 1))
     y = np.array(data['Score']).reshape((-1, 1))
 

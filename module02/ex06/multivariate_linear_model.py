@@ -159,7 +159,11 @@ class MyLinearRegression():
 if __name__ == "__main__":
 
     # read data
-    data = pd.read_csv("./spacecraft_data.csv")
+    try:
+        data = pd.read_csv("./spacecraft_data.csv")
+    except:
+        print("Error when trying to read dataset", file=sys.stderr)
+        sys.exit()
 
     # UNIVARIATE
 
