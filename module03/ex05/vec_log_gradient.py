@@ -22,18 +22,19 @@ def vec_log_gradient(x: np.ndarray, y: np.ndarray,
     """
     try:
         # shape test
-        if (x.shape[0] != y.shape[0] or y.shape[1] != 1
-                or theta.shape[0] != x.shape[1] + 1 or theta.shape[1] != 1):
-            print('Error: wrong shape on parameter(s)')
+        m, n = x.shape
+        if (y.shape[0] != m or y.shape[1] != 1
+                or theta.shape[0] != n + 1 or theta.shape[1] != 1):
+            print('Something went wrong', file=sys.stderr)
             return None
         # adding ones column
-        x_prime = np.hstack((np.ones((x.shape[0], 1)), x))
+        x_prime = np.hstack((np.ones((m, 1)), x))
         # predict
         y_hat = logistic_predict_(x, theta)
         # compute
-        return (1 / x.shape[0]) * x_prime.T.dot(y_hat - y)
-    except (TypeError, ValueError) as exc:
-        print(exc)
+        return (1 / m) * x_prime.T.dot(y_hat - y)
+    except (TypeError, ValueError, AttributeError) as exc:
+        print(exc, file=sys.stderr)
         return None
 
 if __name__ == "__main__":

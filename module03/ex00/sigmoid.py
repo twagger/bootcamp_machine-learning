@@ -1,6 +1,7 @@
 """Sigmoid module"""
-import numpy as np
 import math
+import sys
+import numpy as np
 
 
 def sigmoid_(x: np.ndarray) -> np.ndarray:
@@ -16,13 +17,12 @@ def sigmoid_(x: np.ndarray) -> np.ndarray:
     """
     try:
         # shape test
-        if x.shape[1] != 1:
-            print('Error: wrong shape on parameter(s)')
-            return None
+        x = x.reshape((-1, 1))
         # calculation
-        return (1 / (1 + math.e ** -x))
-    except (TypeError, ValueError) as exc:
-        print(exc)
+        return 1 / (1 + math.e ** -x)
+
+    except (TypeError, ValueError, AttributeError) as exc:
+        print(exc, file=sys.stderr)
         return None
 
 

@@ -1,6 +1,9 @@
 """Logistic regression cost function"""
+import sys
 import numpy as np
 
+sys.path.insert(1, '../ex00/')
+from sigmoid import sigmoid_
 
 def vec_log_loss_(y: np.ndarray, y_hat: np.ndarray, eps: float=1e-15) -> float:
     """
@@ -16,24 +19,26 @@ def vec_log_loss_(y: np.ndarray, y_hat: np.ndarray, eps: float=1e-15) -> float:
         This function should not raise any Exception.
     """
     try:
+        # type test
+        if not isinstance(eps, float):
+            print("Something went wrong", file=sys.stderr)
+            return None
         # shape test
-        if (y.shape[0] != y_hat.shape[0] or y.shape[1] != 1
-                or y_hat.shape[1] != 1):
-            print('Error: wrong shape on parameter(s)')
+        m, _ = y.shape
+        if (y_hat.shape[0] != m or y.shape[1] != 1 or y_hat.shape[1] != 1):
+            print("Something went wrong", file=sys.stderr)
             return None
         # add a little value to y_hat to avoid log(0) problem
-        return float((-(1 / y.shape[0])
-                      * (y.T.dot(np.log(y_hat + eps))
+        return float((-(1 / m) * (y.T.dot(np.log(y_hat + eps))
                          + (1 - y).T.dot(np.log(1 - y_hat + eps))))[0][0])
-    except (TypeError, ValueError) as exc:
-        print(exc)
+    except (TypeError, ValueError, AttributeError) as exc:
+        print(exc, file=sys.stderr)
         return None
 
 
 if __name__ == "__main__":
 
     # imports
-    import sys
     sys.path.insert(1, '../ex01/')
     from log_pred import logistic_predict_
 

@@ -1,6 +1,9 @@
 """Logistic prediction"""
-import numpy as np
 import math
+import sys
+import numpy as np
+sys.path.insert(1, '../ex00/')
+from sigmoid import sigmoid_
 
 
 def logistic_predict_(x: np.ndarray, theta: np.ndarray) -> np.ndarray:
@@ -18,15 +21,17 @@ def logistic_predict_(x: np.ndarray, theta: np.ndarray) -> np.ndarray:
     """
     try:
         # shape test
-        if theta.shape[0] != x.shape[1] + 1 or theta.shape[1] != 1:
+        m, n = x.shape
+        if theta.shape[0] != n + 1 or theta.shape[1] != 1:
             print('Error: wrong shape on parameter(s)')
             return None
         # calculation
-        x_prime = np.hstack((np.ones((x.shape[0], 1)), x))
-        return 1 / (1 + math.e ** -(x_prime.dot(theta)))
-    except (TypeError, ValueError) as exc:
-        print(exc)
+        x_prime = np.c_[np.ones((m, 1)), x]
+        return sigmoid_(x_prime.dot(theta))
+    except (TypeError, ValueError, AttributeError) as exc:
+        print(exc, file=sys.stderr)
         return None
+
 
 if __name__ == "__main__":
 
