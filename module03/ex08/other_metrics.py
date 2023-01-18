@@ -25,7 +25,9 @@ def tf_metrics(y: np.ndarray, y_hat: np.ndarray, pos_label=None) -> tuple:
         false negative number
     """
     # type tests
-    if not isinstance(y, np.ndarray) or not isinstance(y_hat, np.ndarray):
+    if (not isinstance(y, np.ndarray) or not isinstance(y_hat, np.ndarray)
+                or (not isinstance(pos_label, int) 
+                    and not isinstance(pos_label, str))):
         print('Something went wrong', file=sys.stderr)
         return None
     # shape test
@@ -83,7 +85,8 @@ def accuracy_score_(y: np.ndarray, y_hat: np.ndarray) -> float:
 def precision_score_(y: np.ndarray, y_hat: np.ndarray,
                      pos_label: int = 1) -> float:
     """
-    Compute the precision score.
+    Compute the precision score : model's ability to not classify positive
+                                  examples as negative.
     Args:
         y:a numpy.ndarray for the correct labels
         y_hat:a numpy.ndarray for the predicted labels
@@ -118,7 +121,7 @@ def precision_score_(y: np.ndarray, y_hat: np.ndarray,
 def recall_score_(y: np.ndarray, y_hat: np.ndarray,
                   pos_label: int = 1) -> float:
     """
-    Compute the recall score.
+    Compute the recall score : model's ability to detect positive examples.
     Args:
         y:a numpy.ndarray for the correct labels
         y_hat:a numpy.ndarray for the predicted labels
@@ -153,7 +156,10 @@ def recall_score_(y: np.ndarray, y_hat: np.ndarray,
 def f1_score_(y: np.ndarray, y_hat: np.ndarray,
               pos_label: int = 1) -> float:
     """
-    Compute the f1 score.
+    Compute the f1 score : harmonic mean of precision and recall. often used
+                           for imbalanced datasets where it is important to
+                           minimize false negatives while minimizing false
+                           positives.
     Args:
         y:a numpy.ndarray for the correct labels
         y_hat:a numpy.ndarray for the predicted labels
