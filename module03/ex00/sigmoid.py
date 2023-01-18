@@ -19,7 +19,7 @@ def sigmoid_(x: np.ndarray) -> np.ndarray:
         # shape test
         x = x.reshape((-1, 1))
         # calculation
-        return 1 / (1 + math.e ** -x)
+        return 1 / (1 + np.exp(-x))
 
     except (TypeError, ValueError, AttributeError) as exc:
         print(exc, file=sys.stderr)

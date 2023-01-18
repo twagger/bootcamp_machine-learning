@@ -195,6 +195,10 @@ La régression logistique permet de traiter des problèmes de classification. La
 
 On défini géneralement un seul au delà duquel la donnée est identifiée comme appartenant à une classe.
 
+## Entropie croisée
+
+La cross-entropy (ou entropie croisée) est une mesure de la performance d'un modèle de classification pour prédire la probabilité des différentes classes. Elle mesure la similarité entre les prédictions du modèle et les valeurs réelles. Plus la valeur de l'entropie croisée est faible, meilleure est la performance du modèle. C'est souvent utilisé comme une fonction de perte pour entraîner des modèles de classification en utilisant des algorithmes d'optimisation tels que le gradient descendant.
+
 
 # Pérenisation
 
