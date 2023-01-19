@@ -1,4 +1,5 @@
 """Polynomial model feature"""
+import sys
 import numpy as np
 
 
@@ -17,14 +18,18 @@ def add_polynomial_features(x: np.ndarray, power: int) -> np.ndarray:
         This function should not raise any Exception.
     """
     try:
+        # type check
+        if not isinstance(x, np.ndarray) or not isinstance(power, int):
+            print("Something went wrong", file=sys.stderr)
+            return None
         # calculation
-        result = x
+        result = x.copy()
         for i in range(power - 1):
-            result = np.hstack((result, x ** (2 + i)))
+            result = np.c_[result, x ** (2 + i)]
         return result
 
-    except (ValueError, TypeError) as exc:
-        print(exc)
+    except (ValueError, TypeError, AttributeError) as exc:
+        print(exc, file=sys.stderr)
         return None
 
 

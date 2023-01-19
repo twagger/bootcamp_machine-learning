@@ -23,7 +23,7 @@ def logistic_predict_(x: np.ndarray, theta: np.ndarray) -> np.ndarray:
         # shape test
         m, n = x.shape
         if theta.shape[0] != n + 1 or theta.shape[1] != 1:
-            print('Error: wrong shape on parameter(s)')
+            print('Error: wrong shape on parameter(s)', file=sys.stderr)
             return None
         # calculation
         x_prime = np.c_[np.ones((m, 1)), x]

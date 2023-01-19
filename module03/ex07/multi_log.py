@@ -68,6 +68,49 @@ def data_spliter(x: np.ndarray, y: np.ndarray, proportion: float) -> tuple:
         return None
 
 
+# normalization functions
+def normalize_xset(x: np.ndarray) -> np.ndarray:
+    """Normalize each feature an entire set of data"""
+    try:
+        x_norm = np.empty((x.shape[0], 0))
+        for feature in range(x.shape[1]):
+            x_norm = np.hstack((x_norm, z_score(x[:, feature])))
+        return x_norm
+    except (AttributeError, TypeError) as exc:
+        print(exc, file=sys.stderr)
+        return None
+
+
+def z_score(x: np.ndarray) -> np.ndarray:
+    """
+    Computes the normalized version of a non-empty numpy.ndarray using the
+        z-score standardization.
+    Args:
+        x: has to be an numpy.ndarray, a vector.
+    Returns:
+        x' as a numpy.ndarray.
+        None if x is a non-empty numpy.ndarray or not a numpy.ndarray.
+    Raises:
+        This function shouldn't raise any Exception.
+    """
+    try:
+        # type test
+        if not isinstance(x, np.ndarray):
+            print("Something went wrong", file=sys.stderr)
+            return None
+        # shape test
+        x = x.reshape((-1, 1))
+        # normalization
+        z_score_formula = lambda x, std, mean: (x - mean) / std
+        zscore_normalize = np.vectorize(z_score_formula)
+        x_prime = zscore_normalize(x, np.std(x), np.mean(x))
+        return x_prime
+
+    except (ValueError, TypeError, AttributeError) as exc:
+        print(exc, file=sys.stderr)
+        return None
+
+
 if __name__ == "__main__":
 
     # -------------------------------------------------------------------------
@@ -97,6 +140,8 @@ if __name__ == "__main__":
     # -------------------------------------------------------------------------
     # split the dataset into a training set and a test set
     X = np.array(df[['w', 'h', 'd']]).reshape((-1, 3))
+    # normalization : not very efficient here
+    # X = normalize_xset(X)
     y = np.array(df['o']).reshape((-1, 1))
     X_train, X_test, y_train, y_test = data_spliter(X, y, 0.8)
 
@@ -120,7 +165,7 @@ if __name__ == "__main__":
     # create models
     models = []
     for _ in range(4):
-        models.append(MyLR(np.random.rand(4, 1), alpha=1e-2, max_iter=1000000))
+        models.append(MyLR(np.random.rand(4, 1), alpha=1e-2, max_iter=500000))
 
     # train models
     for i in range(4):

@@ -1,4 +1,5 @@
 """Regularized linear gradient"""
+import sys
 import numpy as np
 
 
@@ -8,15 +9,15 @@ def input_validator(func):
         y, x, theta, lambda_ = args
         if (not isinstance(y, np.ndarray) or not isinstance(x, np.ndarray)
                 or not isinstance(theta, np.ndarray)):
-            print('y, x, and theta must be numpy.ndarray')
+            print('Something went wrong', file=sys.stderr)
             return None
         if (y.shape[1] != 1 or theta.shape[1] != 1
                 or x.shape[0] != y.shape[0]
                 or theta.shape[0] != x.shape[1] + 1):
-            print('y, x, and theta must have compatible shapes')
+            print('Something went wrong', file=sys.stderr)
             return None
         if not isinstance(lambda_, float):
-            print('lambda_ must be a float')
+            print('Something went wrong', file=sys.stderr)
             return None
         return func(*args, **kwargs)
     return wrapper
@@ -111,20 +112,20 @@ if __name__ == "__main__":
                   [12],
                   [4],
                   [-19]])
-    
+
     theta = np.array([[7.01],
                       [3],
                       [10.5],
                       [-6]])
 
     # Example 1.1:
-    print(f'ex1.1:\n{reg_linear_grad(y, x, theta, 1)}\n')
+    print(f'ex1.1:\n{reg_linear_grad(y, x, theta, 1.)}\n')
     # Output:
     # array([[ -60.99 ],
     #        [-195.64714286],
     #        [ 863.46571429],
     #        [-644.52142857]])
-    
+
     # Example 1.2:
     print(f'ex1.2:\n{vec_reg_linear_grad(y, x, theta, 1.0)}\n')
     # Output:

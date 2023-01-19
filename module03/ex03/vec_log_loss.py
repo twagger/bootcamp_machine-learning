@@ -29,8 +29,9 @@ def vec_log_loss_(y: np.ndarray, y_hat: np.ndarray, eps: float=1e-15) -> float:
             print("Something went wrong", file=sys.stderr)
             return None
         # add a little value to y_hat to avoid log(0) problem
-        return float((-(1 / m) * (y.T.dot(np.log(y_hat + eps))
-                         + (1 - y).T.dot(np.log(1 - y_hat + eps))))[0][0])
+        y_hat = np.clip(y_hat, eps, 1 - eps)
+        return float((-(1 / m) * (y.T.dot(np.log(y_hat))
+                         + (1 - y).T.dot(np.log(1 - y_hat))))[0][0])
     except (TypeError, ValueError, AttributeError) as exc:
         print(exc, file=sys.stderr)
         return None

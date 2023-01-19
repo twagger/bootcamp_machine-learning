@@ -22,20 +22,26 @@ def reg_log_loss_(y: np.ndarray, y_hat: np.ndarray, theta: np.ndarray,
         This function should not raise any Exception.
     """
     try:
-        # shape test
-        if (y.shape != y_hat.shape or theta.shape[1] != 1):
-            print('Error: wrong shape on parameter(s)')
+        # type test
+        if (not isinstance(y, np.ndarray) or not isinstance(y_hat, np.ndarray)
+                or not isinstance(theta, np.ndarray)
+                or not isinstance(lambda_, float)):
+            print('Something went wrong', file=sys.stderr)
             return None
-        # compputation
+        # shape test
+        m, n = y.shape
+        if (y.shape != y_hat.shape or theta.shape[1] != 1 or n != 1):
+            print('Something went wrong', file=sys.stderr)
+            return None
+        # computation
         eps: float=1e-15
-        non_reg_loss = float((-(1 / y.shape[0])
-                              * (y.T.dot(np.log(y_hat + eps))
-                              + (1 - y).T.dot(np.log(1 - y_hat + eps))))[0][0])
-        reg_loss = (non_reg_loss + (lambda_ / (2 * y.shape[0])) * l2(theta))
-        return reg_loss
+        loss = float((-(1 / m) * (y.T.dot(np.log(y_hat + eps))
+                     + (1 - y).T.dot(np.log(1 - y_hat + eps))))[0][0])
+        regularization_term = (lambda_ / (2 * m)) * l2(theta)
+        return loss + regularization_term
 
-    except (ValueError, TypeError) as exc:
-        print(exc)
+    except (ValueError, TypeError, AttributeError) as exc:
+        print(exc, file=sys.stderr)
         return None
 
 

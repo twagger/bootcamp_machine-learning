@@ -33,7 +33,7 @@ def log_gradient(x: np.ndarray, y: np.ndarray,
         for j in range(n + 1):
             grad_tmp = 0
             if j == 0:
-                grad_tmp = sum([sigmoid_(x_prime.dot(theta))[i][0] - y[i] 
+                grad_tmp = sum([sigmoid_(x_prime.dot(theta))[i][0] - y[i]
                                 for i in range(m)])
             else:
                 grad_tmp = sum([(sigmoid_(x_prime.dot(theta))[i][0] - y[i]) \

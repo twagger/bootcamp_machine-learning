@@ -26,8 +26,8 @@ def tf_metrics(y: np.ndarray, y_hat: np.ndarray, pos_label=None) -> tuple:
     """
     # type tests
     if (not isinstance(y, np.ndarray) or not isinstance(y_hat, np.ndarray)
-                or (not isinstance(pos_label, int) 
-                    and not isinstance(pos_label, str))):
+                or (pos_label is not None and (not isinstance(pos_label, int)
+                    and not isinstance(pos_label, str)))):
         print('Something went wrong', file=sys.stderr)
         return None
     # shape test
@@ -77,7 +77,7 @@ def accuracy_score_(y: np.ndarray, y_hat: np.ndarray) -> float:
         # calculation
         tp, fp, tn, fn = tf_metrics(y, y_hat)
         return (tp + tn) / (tp + fp + tn + fn)
-    
+
     except (TypeError, ValueError, AttributeError) as exc:
         print(exc, file=sys.stderr)
         return None
@@ -112,7 +112,7 @@ def precision_score_(y: np.ndarray, y_hat: np.ndarray,
         # calculation
         tp, fp, _, _ = tf_metrics(y, y_hat, pos_label)
         return tp / (tp + fp)
-    
+
     except (TypeError, ValueError, AttributeError) as exc:
         print(exc, file=sys.stderr)
         return None
@@ -147,7 +147,7 @@ def recall_score_(y: np.ndarray, y_hat: np.ndarray,
         # calculation
         tp, _, _, fn = tf_metrics(y, y_hat, pos_label)
         return tp / (tp + fn)
-    
+
     except (TypeError, ValueError, AttributeError) as exc:
         print(exc, file=sys.stderr)
         return None
@@ -186,7 +186,7 @@ def f1_score_(y: np.ndarray, y_hat: np.ndarray,
         precision = precision_score_(y, y_hat, pos_label=pos_label)
         recall = recall_score_(y, y_hat, pos_label=pos_label)
         return (2 * precision * recall) / (precision + recall)
-    
+
     except (TypeError, ValueError, AttributeError) as exc:
         print(exc, file=sys.stderr)
         return None

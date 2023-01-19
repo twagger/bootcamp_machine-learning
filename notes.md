@@ -199,7 +199,22 @@ On défini géneralement un seul au delà duquel la donnée est identifiée comm
 
 La cross-entropy (ou entropie croisée) est une mesure de la performance d'un modèle de classification pour prédire la probabilité des différentes classes. Elle mesure la similarité entre les prédictions du modèle et les valeurs réelles. Plus la valeur de l'entropie croisée est faible, meilleure est la performance du modèle. C'est souvent utilisé comme une fonction de perte pour entraîner des modèles de classification en utilisant des algorithmes d'optimisation tels que le gradient descendant.
 
+## A documenter sur la regression logistique
+
+- La fonction sigmoid
+- la matrice de confusion
+- les métriques : accuracy score, precision score, recall score
+- le principe de multiclasse (classifier plusieurs classes avec plusieur modeles qui classifient entre une classe et tout le reste)
+- ...
+
 
 # Pérenisation
 
 La pérennisation dans l'apprentissage automatique est le processus par lequel un modèle d'apprentissage automatique est conçu pour continuer à fonctionner de manière efficace sur des données en constante évolution. Cela implique généralement de prendre en compte les tendances changeantes dans les données, de s'assurer que le modèle reste robuste face aux données aberrantes, et d'adapter le modèle aux nouvelles données pour éviter l'overfitting. La pérennisation est souvent utilisée pour les modèles d'apprentissage automatique qui sont utilisés en production pour des tâches telles que la prédiction de la maintenance préventive, la détection de fraudes et la reconnaissance de la parole.
+
+
+# Regulatisation
+
+Regularization term > On ajoute a la fonction de cout un terme de regulatisation afin d'augmenter le cout de la fonction si les parametres sont élevés. La descente de gradient va donc optimiser la fonction cout en baissant la valeur des parametres.
+
+Le parametre lambda permet d'ajuster la regularisation (0 = pas de regularisation, tres élevé = beaucoup de regularisation, si trop de regulatisation la fonction de prediction tend a etre égale a theta 0 (b) dans les videos de Andrew Ng)

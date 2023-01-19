@@ -6,6 +6,7 @@ import pandas as pd
 sys.path.insert(1, '../ex00/')
 from sigmoid import sigmoid_
 
+
 class MyLogisticRegression():
     """
     Description:
@@ -80,8 +81,9 @@ class MyLogisticRegression():
                 return None
             # add a little value to y_hat to avoid log(0) problem
             eps: float=1e-15
-            return -(y * np.log(y_hat + eps)
-                     + (1 - y) * np.log(1 - y_hat + eps))
+            # y_hat = np.clip(y_hat, eps, 1 - eps) < good options for eps
+            return -(y * np.log(y_hat + eps) + (1 - y) \
+                    * np.log(1 - y_hat + eps))
         except (TypeError, ValueError, AttributeError) as exc:
             print(exc, file=sys.stderr)
             return None

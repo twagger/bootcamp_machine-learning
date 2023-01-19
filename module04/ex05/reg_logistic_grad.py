@@ -1,6 +1,6 @@
 """Regularized logistic gradient"""
+import sys
 import numpy as np
-import math
 
 
 def input_validator(func):
@@ -9,15 +9,15 @@ def input_validator(func):
         y, x, theta, lambda_ = args
         if (not isinstance(y, np.ndarray) or not isinstance(x, np.ndarray)
                 or not isinstance(theta, np.ndarray)):
-            print('y, x, and theta must be numpy.ndarray')
+            print('Something went wrong', file=sys.stderr)
             return None
         if (y.shape[1] != 1 or theta.shape[1] != 1
                 or x.shape[0] != y.shape[0]
                 or theta.shape[0] != x.shape[1] + 1):
-            print('y, x, and theta must have compatible shapes')
+            print('Something went wrong', file=sys.stderr)
             return None
         if not isinstance(lambda_, float):
-            print('lambda_ must be a float')
+            print('Something went wrong', file=sys.stderr)
             return None
         return func(*args, **kwargs)
     return wrapper
@@ -42,14 +42,14 @@ def reg_logistic_grad(y: np.ndarray, x: np.ndarray, theta: np.ndarray,
         This function should not raise any Exception.
     """
     try:
-        m = x.shape[0]
-        x_prime = np.hstack((np.ones((x.shape[0], 1)), x))
+        m, n = x.shape
+        x_prime = np.hstack((np.ones((m, 1)), x))
         grad = []
         # calculate the gradient vector by looping on each feature and data
-        for j in range(x_prime.shape[1]):
+        for j in range(n + 1):
             derv = 0.0
             for i in range(m):
-                y_hat_i = 1 / (1 + math.e ** -(x_prime[i, :].dot(theta)))
+                y_hat_i = 1 / (1 + np.exp(-(x_prime[i, :].dot(theta))))
                 derv += (y_hat_i - y[i][0]) * x_prime[i][j]
             regul = lambda_ * theta[j][0] if j > 0 else 0
             grad.append((derv + regul) / m)
@@ -78,11 +78,11 @@ def vec_reg_logistic_grad(y: np.ndarray, x: np.ndarray, theta: np.ndarray,
         This function should not raise any Exception.
     """
     try:
-        m = x.shape[0]
-        x_prime = np.hstack((np.ones((x.shape[0], 1)), x))
+        m, _ = x.shape
+        x_prime = np.hstack((np.ones((m, 1)), x))
         theta_prime = theta.copy()
         theta_prime[0][0] = 0
-        y_hat = 1 / (1 + math.e ** -(x_prime.dot(theta)))
+        y_hat = 1 / (1 + np.exp(-(x_prime.dot(theta))))
         return (x_prime.T.dot(y_hat - y) + lambda_ * theta_prime) / m
 
     except (ValueError, TypeError) as exc:

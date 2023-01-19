@@ -1,4 +1,5 @@
 """L2 regression module"""
+import sys
 import numpy as np
 
 
@@ -15,9 +16,13 @@ def iterative_l2(theta: np.ndarray) -> float:
         This function should not raise any Exception.
     """
     try:
+        # type test
+        if not isinstance(theta, np.ndarray):
+            print('Something went wrong', file=sys.stderr)
+            return None
         # shape test
         if theta.shape[1] != 1:
-            print('Error: wrong shape on parameter(s)')
+            print('Something went wrong', file=sys.stderr)
             return None
         # iterative l2
         result = 0
@@ -26,9 +31,10 @@ def iterative_l2(theta: np.ndarray) -> float:
                 result += theta[i][0] ** 2
         return result
 
-    except (ValueError, TypeError) as exc:
-        print(exc)
+    except (ValueError, TypeError, AttributeError) as exc:
+        print(exc, file=sys.stderr)
         return None
+
 
 def l2(theta: np.ndarray) -> float:
     """
@@ -43,18 +49,23 @@ def l2(theta: np.ndarray) -> float:
         This function should not raise any Exception.
     """
     try:
+        # type test
+        if not isinstance(theta, np.ndarray):
+            print('Something went wrong', file=sys.stderr)
+            return None
         # shape test
         if theta.shape[1] != 1:
-            print('Error: wrong shape on parameter(s)')
+            print('Something went wrong', file=sys.stderr)
             return None
         # l2
         theta_prime = theta
         theta_prime[0][0] = 0
         return theta_prime.T.dot(theta_prime)[0][0]
 
-    except (ValueError, TypeError) as exc:
-        print(exc)
+    except (ValueError, TypeError, AttributeError) as exc:
+        print(exc, file=sys.stderr)
         return None
+
 
 if __name__ == "__main__":
 
