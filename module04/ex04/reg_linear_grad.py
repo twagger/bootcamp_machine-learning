@@ -44,8 +44,8 @@ def reg_linear_grad(y: np.ndarray, x: np.ndarray, theta: np.ndarray,
     """
     try:
         # computation
-        m = x.shape[0]
-        x_prime = np.hstack((np.ones((x.shape[0], 1)), x))
+        m, _ = x.shape
+        x_prime = np.hstack((np.ones((m, 1)), x))
         grad = []
         # calculate the gradient vector by looping on each feature and data
         for j in range(x_prime.shape[1]):
@@ -83,8 +83,8 @@ def vec_reg_linear_grad(y: np.ndarray, x: np.ndarray, theta: np.ndarray,
     """
     try:
         # computation
-        m = x.shape[0]
-        x_prime = np.hstack((np.ones((x.shape[0], 1)), x))
+        m, _ = x.shape
+        x_prime = np.hstack((np.ones((m, 1)), x))
         theta_prime = theta.copy()
         theta_prime[0][0] = 0
         y_hat = x_prime.dot(theta)
