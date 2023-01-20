@@ -218,3 +218,5 @@ La pérennisation dans l'apprentissage automatique est le processus par lequel u
 Regularization term > On ajoute a la fonction de cout un terme de regulatisation afin d'augmenter le cout de la fonction si les parametres sont élevés. La descente de gradient va donc optimiser la fonction cout en baissant la valeur des parametres.
 
 Le parametre lambda permet d'ajuster la regularisation (0 = pas de regularisation, tres élevé = beaucoup de regularisation, si trop de regulatisation la fonction de prediction tend a etre égale a theta 0 (b) dans les videos de Andrew Ng)
+
+## Regression de crête (Ridge regression) = Regression lineaire avec regulatisation L2
