@@ -24,9 +24,17 @@ from ridge import MyRidge
 # Global params
 max_iter = 10000
 alpha = 1e-1
+cols = ['w', 'w2', 'w3', 'w4', 'p', 'p2', 'p3', 'p4', 't', 't2', 't3', 't4',
+        'wp', 'wp2', 'wp3', 'wp4', 'wt', 'wt2', 'wt3', 'wt4', 'pt', 'pt2',
+        'pt3', 'pt4', 'wpt', 'wpt2', 'wpt3', 'wpt4']
 
 # generic type validation based on type annotation in function signature
 def type_validator(func):
+    """
+    Decorator that will rely on the types and attributes declaration in the
+    function's signature to check the actual types of the parameter against the
+    expected types
+    """
     # extract information about the function's parameters and return type.
     sig = inspect.signature(func)
     # preserve name and docstring of decorated function
@@ -40,7 +48,8 @@ def type_validator(func):
                 param = sig.parameters[name]
                 if (param.annotation != param.empty
                         and not isinstance(value, param.annotation)):
-                    print(f"Expected type '{param.annotation}' for argument " \
+                    print(f"function '{func.__name__}' : " \
+                          f"expected type '{param.annotation}' for argument " \
                           f"'{name}' but got {type(value)}.")
                     return None
         return func(*args, **kwargs)
@@ -58,6 +67,7 @@ class ModelWithInfos:
 
 
 # Data splitter < Copied because the exercice limit the files to use
+@type_validator
 def data_spliter(x: np.ndarray, y: np.ndarray, proportion: float) -> tuple:
     """
     Shuffles and splits the dataset (given by x and y) into a training and a
@@ -77,9 +87,6 @@ def data_spliter(x: np.ndarray, y: np.ndarray, proportion: float) -> tuple:
         This function should not raise any Exception.
     """
     try:
-        # type test
-        if not isinstance(proportion, float):
-            print('Something went wrong', file=sys.stderr)
         # shape test
         m, n = x.shape
         if y.shape[0] != m or y.shape[1] != 1:
@@ -102,6 +109,7 @@ def data_spliter(x: np.ndarray, y: np.ndarray, proportion: float) -> tuple:
 
 
 # Polynomial features < Copied because the exercice limit the files to use
+@type_validator
 def add_polynomial_features(x: np.ndarray, power: int) -> np.ndarray:
     """
     Add polynomial features to vector x by raising its values up to the power
@@ -119,10 +127,6 @@ def add_polynomial_features(x: np.ndarray, power: int) -> np.ndarray:
         This function should not raise any Exception.
     """
     try:
-        # type test
-        if not isinstance(power, int):
-            print('Something went wrong', file=sys.stderr)
-            return None
         x = x.reshape((-1, 1))
         # calculation
         result = x.copy()
@@ -136,12 +140,9 @@ def add_polynomial_features(x: np.ndarray, power: int) -> np.ndarray:
 
 
 # Data preparation functions
+@type_validator
 def polynomial_matrix(x: np.ndarray, degree: int) -> np.ndarray:
     """return the polynomial matrix for x"""
-    # type test
-    if not isinstance(degree, int):
-        print("Something went wrong", file=sys.stderr)
-        return None
     try:
         m, n = x.shape
         x_ = np.empty((m, 0))
@@ -153,15 +154,12 @@ def polynomial_matrix(x: np.ndarray, degree: int) -> np.ndarray:
         return None
 
 
+@type_validator
 def combined_features(x: np.ndarray, max: int = 2) -> np.ndarray:
     """
     return the combined features matrix for x where every feature is combined
     with each other feature to the maximum level of combination
     """
-    # type test
-    if not isinstance(max, int):
-        print("Something went wrong", file=sys.stderr)
-        return None
     try:
         combined = np.copy(x)
         for ii in range(2, max + 1):
@@ -175,12 +173,13 @@ def combined_features(x: np.ndarray, max: int = 2) -> np.ndarray:
         return None
 
 
+@type_validator
 def normalize_xset(x: np.ndarray) -> np.ndarray:
     """Normalize each feature an entire set of data"""
     try:
         x_norm = np.empty((x.shape[0], 0))
         for feature in range(x.shape[1]):
-            x_norm = np.hstack((x_norm, z_score(x[:, feature])))
+            x_norm = np.c_[x_norm, z_score(x[:, feature])]
         return x_norm
     except (AttributeError, TypeError) as exc:
         print(exc, file=sys.stderr)
@@ -188,17 +187,11 @@ def normalize_xset(x: np.ndarray) -> np.ndarray:
 
 
 # Saving to file functions
+@type_validator
 def save_training(writer, nb_model: int, form: str, thetas: np.ndarray,
                   alpha: float, max_iter: int, lambda_: float, loss: float,
                   train_loss: float):
     """save the training in csv file"""
-    # type check
-    if (not isinstance(nb_model, int) or not isinstance(form, str)
-            or not isinstance(thetas, np.ndarray)
-            or not isinstance(alpha, float) or not isinstance(max_iter, int)
-            or not isinstance(loss, float)):
-        print("Something went wrong", file=sys.stderr)
-        return None
     try:
         thetas_str = ','.join([f'{theta[0]}' for theta in thetas])
         writer.writerow([nb_model, form, thetas_str, alpha, max_iter, lambda_,
@@ -209,6 +202,7 @@ def save_training(writer, nb_model: int, form: str, thetas: np.ndarray,
 
 
 # normalization function
+@type_validator
 def z_score(x: np.ndarray) -> np.ndarray:
     """
     Computes the normalized version of a non-empty numpy.ndarray using the
@@ -222,10 +216,6 @@ def z_score(x: np.ndarray) -> np.ndarray:
         This function shouldn't raise any Exception.
     """
     try:
-        # type test
-        if not isinstance(x, np.ndarray):
-            print("Something went wrong", file=sys.stderr)
-            return None
         # shape test
         x = x.reshape((-1, 1))
         # normalization
@@ -240,33 +230,32 @@ def z_score(x: np.ndarray) -> np.ndarray:
 
 
 # model training function to push it to multithreading
-def train_model(model: ModelWithInfos, df):
+@type_validator
+def train_model(model: ModelWithInfos, X_train: np.ndarray,
+                y_train: np.ndarray, X_val: np.ndarray, y_val: np.ndarray):
     """Train the model and save information about its performance"""
     try:
-        # Select the subset of features associated with the model
+        # Select only the subset of features associated with the model
         features = model.features
-        X = np.array(df[features]).reshape((-1, len(features)))
-        # split function to produce X_train, X_test, y_train, y_test
-        X_train, X_test, y_train, y_test = data_spliter(X, y, 0.8)
-        # Train the model on 80% of the data
+        f_indices = [i for i, feat in enumerate(cols) if feat in features]
+        X_train = X_train.copy()[:, f_indices]
+        X_val = X_val.copy()[:, f_indices]
+        # Train model
         model.m.fit_(X_train, y_train)
-        # Test the model against 20% of the data and mesure the loss
+        # Model metrics : train vs cross validation
         model.train_loss = model.m.loss_(y_train, model.m.predict_(X_train))
-        model.loss = model.m.loss_(y_test, model.m.predict_(X_test))
-    except (TypeError, AttributeError, ValueError) as exc:
+        model.loss = model.m.loss_(y_val, model.m.predict_(X_val))
+    except (ValueError, TypeError, AttributeError) as exc:
         print(exc, file=sys.stderr)
+        return None
 
 
 # misc tools
+@type_validator
 def save_model(num: int, models: list, model: MyRidge, features: list):
     """save a model into a dictionnary of models"""
-    # type check
-    if (not isinstance(models, list) or not isinstance(model, MyRidge)
-            or not isinstance(features, list)):
-        print("Something went wrong", file=sys.stderr)
-    else:
-        models.append(ModelWithInfos(num=num, m=model, features=features,
-                                     loss=None, train_loss=None))
+    models.append(ModelWithInfos(num=num, m=model, features=features,
+                                 loss=None, train_loss=None))
 
 
 # main program
@@ -304,7 +293,7 @@ if __name__ == "__main__":
     # - basic features : w, p, t
     # - composite features : wp, wt, pt, wpt
     # - all : w, p, t, wp, wt, pt, wpt
-    x_comb = combined_features(X, max=3)
+    X_comb = combined_features(X, max=3)
 
     # add polynomial features up to degree 4
     # degree 1 : w, p, t, wp, wt, pt, wpt
@@ -314,17 +303,19 @@ if __name__ == "__main__":
     # degree 4 : w, w2, w3, w4, p, p2, p3, p4, t, t2, t3, t4, wp, wp2, wp3,
     #            wp4, wt, wt2, wt3, wt4, pt, pt2, pt3, pt4, wpt, wpt2, wpt3,
     #            wpt4
-    x_poly = polynomial_matrix(x_comb, 4)
+    X_poly = polynomial_matrix(X_comb, 4)
 
     # normalize data to ease thetas optimization through gradient descent
-    x_norm = normalize_xset(x_poly)
+    X_norm = normalize_xset(X_poly)
 
-    # switch back to dataframe and relabel columns to ease feature selection
-    # during model training
-    cols = ['w', 'w2', 'w3', 'w4', 'p', 'p2', 'p3', 'p4', 't', 't2', 't3',
-            't4', 'wp', 'wp2', 'wp3', 'wp4', 'wt', 'wt2', 'wt3', 'wt4', 'pt',
-            'pt2', 'pt3', 'pt4', 'wpt', 'wpt2', 'wpt3', 'wpt4']
-    df = pd.DataFrame(data=x_norm, columns=cols)
+    # -------------------------------------------------------------------------
+    # 3. Split data : training set / cross validation set / test set (60/20/20)
+    # -------------------------------------------------------------------------
+    # Split dataset : train / cross validation / test (60/20/20)
+    # train / validation + test (60/40)
+    X_train, X_val_test, y_train, y_val_test = data_spliter(X_norm, y, 0.6)
+    # cross validation / test (50/50)
+    X_test, X_val, y_test, y_val = data_spliter(X_val_test, y_val_test, 0.5)
 
     # -------------------------------------------------------------------------
     # 3. Create models : from basic to complex combination of features
@@ -332,7 +323,7 @@ if __name__ == "__main__":
     # Here I use way less models than in module 02 as gradient descent will
     # minimize the parameters with les effect on the loss
     # I compare the model with and without data augmentation (combined data) to
-    # check if it is effective in this case or not.
+    # check if it is effective in this case or not ( >> it is not effective).
     models = []
 
     # apply lambda 0 to 1 (with 0.2 step)
@@ -340,41 +331,41 @@ if __name__ == "__main__":
 
         # WITH combined
         # all params, including combined, 1 degree
-        model = MyRidge(thetas = np.random.rand(8, 1), alpha=alpha,
-                        max_iter=max_iter, lambda_=lambda_)
+        model = MyRidge(np.random.rand(8, 1), alpha=alpha, max_iter=max_iter,
+                        lambda_=lambda_)
         save_model(1, models, model, ['w',
                                       'p',
                                       't',
                                       'wp',
                                       'wt',
                                       'pt',
-                                      'wpt',])
+                                      'wpt'])
 
         # all params, including combined, 2 degrees
-        model = MyRidge(thetas = np.random.rand(15, 1), alpha=alpha,
-                        max_iter=max_iter, lambda_=lambda_)
+        model = MyRidge(np.random.rand(15, 1), alpha=alpha, max_iter=max_iter,
+                        lambda_=lambda_)
         save_model(2, models, model, ['w', 'w2',
                                       'p', 'p2',
                                       't', 't2',
                                       'wp', 'wp2',
                                       'wt', 'wt2',
                                       'pt', 'pt2',
-                                      'wpt', 'wpt2',])
+                                      'wpt', 'wpt2'])
 
         # all params, including combined, 3 degrees
-        model = MyRidge(thetas = np.random.rand(22, 1), alpha=alpha,
-                        max_iter=max_iter, lambda_=lambda_)
+        model = MyRidge(np.random.rand(22, 1), alpha=alpha, max_iter=max_iter,
+                        lambda_=lambda_)
         save_model(3, models, model, ['w', 'w2', 'w3',
                                       'p', 'p2', 'p3',
                                       't', 't2', 't3',
                                       'wp', 'wp2', 'wp3',
                                       'wt', 'wt2', 'wt3',
                                       'pt', 'pt2', 'pt3',
-                                      'wpt', 'wpt2', 'wpt3',])
+                                      'wpt', 'wpt2', 'wpt3'])
 
         # all params, including combined, 4 degrees
-        model = MyRidge(thetas = np.random.rand(29, 1), alpha=alpha,
-                        max_iter=max_iter, lambda_=lambda_)
+        model = MyRidge(np.random.rand(29, 1), alpha=alpha, max_iter=max_iter,
+                        lambda_=lambda_)
         save_model(4, models, model, ['w', 'w2', 'w3', 'w4',
                                       'p', 'p2', 'p3', 'p4',
                                       't', 't2', 't3', 't4',
@@ -385,29 +376,29 @@ if __name__ == "__main__":
 
         # WITHOUT combined
         # all params, 1 degree
-        model = MyRidge(thetas = np.random.rand(4, 1), alpha=alpha,
-                        max_iter=max_iter, lambda_=lambda_)
+        model = MyRidge(np.random.rand(4, 1), alpha=alpha, max_iter=max_iter,
+                        lambda_=lambda_)
         save_model(5, models, model, ['w',
                                       'p',
                                       't'])
 
         # all params, 2 degrees
-        model = MyRidge(thetas = np.random.rand(7, 1), alpha=alpha,
-                        max_iter=max_iter, lambda_=lambda_)
+        model = MyRidge(np.random.rand(7, 1), alpha=alpha, max_iter=max_iter,
+                        lambda_=lambda_)
         save_model(6, models, model, ['w', 'w2',
                                       'p', 'p2',
                                       't', 't2'])
 
         # all params, 3 degrees
-        model = MyRidge(thetas = np.random.rand(10, 1), alpha=alpha,
-                        max_iter=max_iter, lambda_=lambda_)
+        model = MyRidge(np.random.rand(10, 1), alpha=alpha, max_iter=max_iter,
+                        lambda_=lambda_)
         save_model(7, models, model, ['w', 'w2', 'w3',
                                       'p', 'p2', 'p3',
                                       't', 't2', 't3'])
 
         # all params, 4 degrees
-        model = MyRidge(thetas = np.random.rand(13, 1), alpha=alpha,
-                        max_iter=max_iter, lambda_=lambda_)
+        model = MyRidge(np.random.rand(13, 1), alpha=alpha, max_iter=max_iter,
+                        lambda_=lambda_)
         save_model(8, models, model, ['w', 'w2', 'w3', 'w4',
                                       'p', 'p2', 'p3', 'p4',
                                       't', 't2', 't3', 't4'])
@@ -423,7 +414,8 @@ if __name__ == "__main__":
     # model training and loss calculation with multithreading
     for model in tqdm(models):
         with concurrent.futures.ThreadPoolExecutor() as executor:
-            executor.submit(train_model, model, df)
+            executor.submit(train_model, model, X_train, y_train, X_val, y_val)
+
     # -------------------------------------------------------------------------
     # 5. Save all models with their hyperparameters and results
     # -------------------------------------------------------------------------
@@ -472,24 +464,26 @@ if __name__ == "__main__":
                       the_model.train_loss)
 
     # plot 3 scatter plots : prediction vs true price with the best model
-    y_hat = the_model.m.predict_(df[the_model.features].to_numpy())
+    # Select only the subset of features associated with the best model
+    features = the_model.features
+    f_indices = [i for i, feat in enumerate(cols) if feat in features]
+    X_test = X_test.copy()[:, f_indices]
+    # predict y_hat
+    y_hat = the_model.m.predict_(X_test)
     plt.figure()
     plt.title('Prediction versus true price')
     plt.ylabel('Price')
     plt.subplot(1,3,1)
     plt.xlabel('Weight')
-    plt.scatter(np.array(df['w']).reshape((-1, 1)), y, label='True')
-    plt.scatter(np.array(df['w']).reshape((-1, 1)), y_hat, label='Predicted',
-                marker='x')
+    plt.scatter(X_test[:, 0], y_test, label='True')
+    plt.scatter(X_test[:, 0], y_hat, label='Predicted', marker='x')
     plt.subplot(1,3,2)
     plt.xlabel('Production distance')
-    plt.scatter(np.array(df['p']).reshape((-1, 1)), y, label='True')
-    plt.scatter(np.array(df['p']).reshape((-1, 1)), y_hat, label='Predicted',
-                marker='x')
+    plt.scatter(X_test[:, 4], y_test, label='True')
+    plt.scatter(X_test[:, 4], y_hat, label='Predicted', marker='x')
     plt.subplot(1,3,3)
     plt.xlabel('Time delivery')
-    plt.scatter(np.array(df['t']).reshape((-1, 1)), y, label='True')
-    plt.scatter(np.array(df['t']).reshape((-1, 1)), y_hat, label='Predicted',
-                marker='x')
+    plt.scatter(X_test[:, 8], y_test, label='True')
+    plt.scatter(X_test[:, 8], y_hat, label='Predicted', marker='x')
     plt.legend()
     plt.show()
