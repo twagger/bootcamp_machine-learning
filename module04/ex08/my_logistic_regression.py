@@ -12,6 +12,11 @@ from functools import wraps
 # -----------------------------------------------------------------------------
 # generic type validation based on type annotation in function signature
 def type_validator(func):
+    """
+    Decorator that will rely on the types and attributes declaration in the
+    function's signature to check the actual types of the parameter against the
+    expected types
+    """
     # extract information about the function's parameters and return type.
     sig = inspect.signature(func)
     # preserve name and docstring of decorated function
@@ -25,11 +30,13 @@ def type_validator(func):
                 param = sig.parameters[name]
                 if (param.annotation != param.empty
                         and not isinstance(value, param.annotation)):
-                    print(f"Expected type '{param.annotation}' for argument " \
+                    print(f"function '{func.__name__}' : " \
+                          f"expected type '{param.annotation}' for argument " \
                           f"'{name}' but got {type(value)}.")
                     return None
         return func(*args, **kwargs)
     return wrapper
+
 
 # shape validation (a bit long and not very elegant. I should redo it)
 def shape_validator(shape_mapping: dict):

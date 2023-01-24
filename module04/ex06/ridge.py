@@ -12,6 +12,11 @@ from functools import wraps
 # -----------------------------------------------------------------------------
 # generic type validation based on type annotation in function signature
 def type_validator(func):
+    """
+    Decorator that will rely on the types and attributes declaration in the
+    function's signature to check the actual types of the parameter against the
+    expected types
+    """
     # extract information about the function's parameters and return type.
     sig = inspect.signature(func)
     # preserve name and docstring of decorated function
@@ -25,7 +30,8 @@ def type_validator(func):
                 param = sig.parameters[name]
                 if (param.annotation != param.empty
                         and not isinstance(value, param.annotation)):
-                    print(f"Expected type '{param.annotation}' for argument " \
+                    print(f"function '{func.__name__}' : " \
+                          f"expected type '{param.annotation}' for argument " \
                           f"'{name}' but got {type(value)}.")
                     return None
         return func(*args, **kwargs)
@@ -38,9 +44,7 @@ def regularize_loss(func):
         y, y_hat = args
         m, _ = y.shape
         loss = func(self, y, y_hat)
-        theta_prime = self.thetas.copy()
-        theta_prime[0][0] = 0
-        regularization_term = (self.lambda_ / (2 * m)) * l2(theta_prime)
+        regularization_term = (self.lambda_ / (2 * m)) * l2(self.thetas)
         return loss + regularization_term
     return wrapper
 
@@ -64,12 +68,12 @@ def regularize_grad(func):
 # -----------------------------------------------------------------------------
 # L2 regularization
 @type_validator
-def l2(theta: np.ndarray) -> float:
+def l2(thetas: np.ndarray) -> float:
     """
     Computes the L2 regularization of a non-empty numpy.ndarray, without any
         for-loop.
     Args:
-        theta: has to be a numpy.ndarray, a vector of shape n * 1.
+        thetas: has to be a numpy.ndarray, a vector of shape n * 1.
     Returns:
         The L2 regularization as a float.
         None if theta in an empty numpy.ndarray.
@@ -78,15 +82,15 @@ def l2(theta: np.ndarray) -> float:
     """
     try:
         # type test
-        if not isinstance(theta, np.ndarray):
+        if not isinstance(thetas, np.ndarray):
             print('thetas must be a numpy array', file=sys.stderr)
             return None
         # shape test
-        if theta.shape[1] != 1:
+        if thetas.shape[1] != 1:
             print('wrong shape on parameter', file=sys.stderr)
             return None
         # l2
-        theta_prime = theta
+        theta_prime = thetas.copy()
         theta_prime[0][0] = 0
         return theta_prime.T.dot(theta_prime)[0][0]
 
@@ -258,7 +262,7 @@ class MyRidge(MyLinearRegression):
     """
 
     @type_validator
-    def __init__(self, thetas: np.ndarray = None, alpha: float = 0.001,
+    def __init__(self, thetas: np.ndarray, alpha: float = 0.001,
                  max_iter: int = 1000, lambda_: float = 0.5):
         super().__init__(thetas, alpha=alpha, max_iter=max_iter)
         self.lambda_ = lambda_
