@@ -10,14 +10,14 @@ from functools import wraps
 # -----------------------------------------------------------------------------
 # decorators
 # -----------------------------------------------------------------------------
-# generic type validation based on type annotation in function prototype
+# generic type validation based on type annotation in function signature
 def type_validator(func):
     # extract information about the function's parameters and return type.
     sig = inspect.signature(func)
     # preserve name and docstring of decorated function
     @wraps(func)
     def wrapper(*args, **kwargs):
-        # map the parameter names to their corresponding values
+        # map the parameter from signature to their corresponding values
         bound_args = sig.bind(*args, **kwargs)
         # check for each name of param if value has the declared type
         for name, value in bound_args.arguments.items():

@@ -2,6 +2,7 @@
 Ridge regression :  linear regression regularized with L2
 """
 import sys
+import inspect
 import numpy as np
 from functools import wraps
 
@@ -9,29 +10,26 @@ from functools import wraps
 # -----------------------------------------------------------------------------
 # decorators
 # -----------------------------------------------------------------------------
-# type validation
+# generic type validation based on type annotation in function signature
 def type_validator(func):
-    @wraps(func) # to preserve name and docstring of decorated function
-    def wrapper(self, thetas: np.ndarray = None, alpha: float = None,
-                max_iter: int = None, lambda_: float = None):
-        if thetas is not None and not isinstance(thetas, np.ndarray):
-            print("thetas must be a numpy array", file=sys.stderr)
-            return None
-        if alpha is not None and not isinstance(alpha, float):
-            print("alpha must be a float", file=sys.stderr)
-            return None
-        if max_iter is not None and not isinstance(max_iter, int):
-            print("max_iter must be an int", file=sys.stderr)
-            return None
-        if lambda_ is not None:
-            if not isinstance(lambda_, float):
-                print("lambda_ must be a float", file=sys.stderr)
-                return None
-            return func(self, thetas, alpha=alpha, max_iter=max_iter,
-                        lambda_=lambda_)
-        return func(self, thetas, alpha=alpha, max_iter=max_iter)
+    # extract information about the function's parameters and return type.
+    sig = inspect.signature(func)
+    # preserve name and docstring of decorated function
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        # map the parameter from signature to their corresponding values
+        bound_args = sig.bind(*args, **kwargs)
+        # check for each name of param if value has the declared type
+        for name, value in bound_args.arguments.items():
+            if name in sig.parameters:
+                param = sig.parameters[name]
+                if (param.annotation != param.empty
+                        and not isinstance(value, param.annotation)):
+                    print(f"Expected type '{param.annotation}' for argument " \
+                          f"'{name}' but got {type(value)}.")
+                    return None
+        return func(*args, **kwargs)
     return wrapper
-
 
 # regulatization of loss
 def regularize_loss(func):
@@ -65,6 +63,7 @@ def regularize_grad(func):
 # helper functions
 # -----------------------------------------------------------------------------
 # L2 regularization
+@type_validator
 def l2(theta: np.ndarray) -> float:
     """
     Computes the L2 regularization of a non-empty numpy.ndarray, without any
@@ -112,6 +111,7 @@ class MyLinearRegression():
         self.max_iter = max_iter
         self.thetas = np.array(thetas).reshape((-1, 1))
 
+    @type_validator
     def predict_(self, x: np.ndarray) -> np.ndarray:
         """
         Computes the vector of prediction y_hat from two non-empty numpy.array.
@@ -126,10 +126,6 @@ class MyLinearRegression():
             This function should not raise any Exceptions.
         """
         try:
-            # type test
-            if not isinstance(x, np.ndarray):
-                print('x1must be a numpy array', file=sys.stderr)
-                return None
             # shape test
             m, n = x.shape
             if self.thetas.shape[0] != n + 1:
@@ -140,6 +136,7 @@ class MyLinearRegression():
         except:
             return None
 
+    @type_validator    
     def loss_elem_(self, y: np.ndarray, y_hat: np.ndarray) -> np.ndarray:
         """
         Description:
@@ -163,6 +160,7 @@ class MyLinearRegression():
         except:
             return None
 
+    @type_validator
     def loss_(self, y: np.ndarray, y_hat: np.ndarray) -> float:
         """
         Computes the half mean squared error of two non-empty numpy.array,
@@ -185,6 +183,7 @@ class MyLinearRegression():
         except:
             return None
 
+    @type_validator
     def gradient_(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
         """
         Computes the regularized linear gradient of three non-empty
@@ -202,13 +201,6 @@ class MyLinearRegression():
             This function should not raise any Exception.
         """
         try:
-            # type check
-            if x is not None and not isinstance(x, np.ndarray):
-                print("x must be a numpy array", file=sys.stderr)
-                return None
-            if y is not None and not isinstance(y, np.ndarray):
-                print("y must be a numpy array", file=sys.stderr)
-                return None
             # shape test
             m, _ = x.shape
             if y.shape[0] != m or y.shape[1] != 1:
@@ -222,6 +214,7 @@ class MyLinearRegression():
             print(exc, file=sys.stderr)
             return None
 
+    @type_validator
     def fit_(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
         """
         Description:
@@ -238,13 +231,6 @@ class MyLinearRegression():
             This function should not raise any Exception.
         """
         try:
-            # type check
-            if x is not None and not isinstance(x, np.ndarray):
-                print("x must be a numpy array", file=sys.stderr)
-                return None
-            if y is not None and not isinstance(y, np.ndarray):
-                print("y must be a numpy array", file=sys.stderr)
-                return None
             # shape test
             m, _ = x.shape
             if (y.shape[0] != m or y.shape[1] != 1):
@@ -294,10 +280,12 @@ class MyRidge(MyLinearRegression):
         if thetas is not None:
             self.thetas = np.array(thetas).reshape((-1, 1))
 
+    @type_validator
     @regularize_loss
     def loss_(self, y: np.ndarray, y_hat: np.ndarray) -> np.ndarray:
         return super().loss_(y, y_hat)
 
+    @type_validator
     @regularize_grad
     def gradient_(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
         return super().gradient_(x, y)

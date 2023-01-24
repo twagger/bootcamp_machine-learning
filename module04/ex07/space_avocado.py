@@ -7,18 +7,43 @@ In models.csv are the parameters of all the models I have explored and trained.
 import sys
 import os
 import itertools
+import inspect
 import numpy as np
 import pandas as pd
 import csv
 import matplotlib.pyplot as plt
+from functools import wraps
 
 # user modules
 sys.path.insert(1, os.path.join(os.path.dirname(__file__), '..', 'ex06'))
 from ridge import MyRidge
 
 # Global params
-max_iter = 1000000
+max_iter = 1000
 alpha = 1e-1
+
+
+# generic type validation based on type annotation in function signature
+def type_validator(func):
+    # extract information about the function's parameters and return type.
+    sig = inspect.signature(func)
+    # preserve name and docstring of decorated function
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        # map the parameter from signature to their corresponding values
+        bound_args = sig.bind(*args, **kwargs)
+        # check for each name of param if value has the declared type
+        for name, value in bound_args.arguments.items():
+            if name in sig.parameters:
+                param = sig.parameters[name]
+                if (param.annotation != param.empty
+                        and not isinstance(value, param.annotation)):
+                    print(f"Expected type '{param.annotation}' for argument " \
+                          f"'{name}' but got {type(value)}.")
+                    return None
+        return func(*args, **kwargs)
+    return wrapper
+
 
 # specific data structure
 class ModelWithInfos:
@@ -32,6 +57,7 @@ class ModelWithInfos:
 
 
 # Data splitter < Copied because the exercice limit the files to use
+@type_validator
 def data_spliter(x: np.ndarray, y: np.ndarray, proportion: float) -> tuple:
     """
     Shuffles and splits the dataset (given by x and y) into a training and a
@@ -51,9 +77,6 @@ def data_spliter(x: np.ndarray, y: np.ndarray, proportion: float) -> tuple:
         This function should not raise any Exception.
     """
     try:
-        # type test
-        if not isinstance(proportion, float):
-            print('Something went wrong', file=sys.stderr)
         # shape test
         m, n = x.shape
         if y.shape[0] != m or y.shape[1] != 1:
@@ -76,6 +99,7 @@ def data_spliter(x: np.ndarray, y: np.ndarray, proportion: float) -> tuple:
 
 
 # Polynomial features < Copied because the exercice limit the files to use
+@type_validator
 def add_polynomial_features(x: np.ndarray, power: int) -> np.ndarray:
     """
     Add polynomial features to vector x by raising its values up to the power
@@ -93,10 +117,6 @@ def add_polynomial_features(x: np.ndarray, power: int) -> np.ndarray:
         This function should not raise any Exception.
     """
     try:
-        # type test
-        if not isinstance(power, int):
-            print('Something went wrong', file=sys.stderr)
-            return None
         x = x.reshape((-1, 1))
         # calculation
         result = x.copy()
@@ -110,12 +130,9 @@ def add_polynomial_features(x: np.ndarray, power: int) -> np.ndarray:
 
 
 # Data preparation functions
+@type_validator
 def polynomial_matrix(x: np.ndarray, degree: int) -> np.ndarray:
     """return the polynomial matrix for x"""
-    # type test
-    if not isinstance(degree, int):
-        print("Something went wrong", file=sys.stderr)
-        return None
     try:
         m, n = x.shape
         x_ = np.empty((m, 0))
@@ -127,15 +144,12 @@ def polynomial_matrix(x: np.ndarray, degree: int) -> np.ndarray:
         return None
 
 
+@type_validator
 def combined_features(x: np.ndarray, max: int = 2) -> np.ndarray:
     """
     return the combined features matrix for x where every feature is combined
     with each other feature to the maximum level of combination
     """
-    # type test
-    if not isinstance(max, int):
-        print("Something went wrong", file=sys.stderr)
-        return None
     try:
         combined = np.copy(x)
         for ii in range(2, max + 1):
@@ -149,6 +163,7 @@ def combined_features(x: np.ndarray, max: int = 2) -> np.ndarray:
         return None
 
 
+@type_validator
 def normalize_xset(x: np.ndarray) -> np.ndarray:
     """Normalize each feature an entire set of data"""
     try:
@@ -162,17 +177,11 @@ def normalize_xset(x: np.ndarray) -> np.ndarray:
 
 
 # Saving to file functions
+@type_validator
 def save_training(writer, nb_model: int, form: str, thetas: np.ndarray,
                   alpha: float, max_iter: int, lambda_: float, loss: float,
                   train_loss: float):
     """save the training in csv file"""
-    # type check
-    if (not isinstance(nb_model, int) or not isinstance(form, str)
-            or not isinstance(thetas, np.ndarray)
-            or not isinstance(alpha, float) or not isinstance(max_iter, int)
-            or not isinstance(loss, float)):
-        print("Something went wrong", file=sys.stderr)
-        return None
     try:
         thetas_str = ','.join([f'{theta[0]}' for theta in thetas])
         writer.writerow([nb_model, form, thetas_str, alpha, max_iter, loss,
@@ -183,6 +192,7 @@ def save_training(writer, nb_model: int, form: str, thetas: np.ndarray,
 
 
 # normalization function
+@type_validator
 def z_score(x: np.ndarray) -> np.ndarray:
     """
     Computes the normalized version of a non-empty numpy.ndarray using the
@@ -196,10 +206,6 @@ def z_score(x: np.ndarray) -> np.ndarray:
         This function shouldn't raise any Exception.
     """
     try:
-        # type test
-        if not isinstance(x, np.ndarray):
-            print("Something went wrong", file=sys.stderr)
-            return None
         # shape test
         x = x.reshape((-1, 1))
         # normalization

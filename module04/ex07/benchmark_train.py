@@ -8,12 +8,14 @@ In models.csv are the parameters of all the models I have explored and trained.
 import os
 import sys
 import itertools
+import inspect
 import concurrent.futures
 import numpy as np
 import pandas as pd
 import csv
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+from functools import wraps
 
 # user modules
 sys.path.insert(1, os.path.join(os.path.dirname(__file__), '..', 'ex06'))
@@ -22,6 +24,27 @@ from ridge import MyRidge
 # Global params
 max_iter = 10000
 alpha = 1e-1
+
+# generic type validation based on type annotation in function signature
+def type_validator(func):
+    # extract information about the function's parameters and return type.
+    sig = inspect.signature(func)
+    # preserve name and docstring of decorated function
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        # map the parameter from signature to their corresponding values
+        bound_args = sig.bind(*args, **kwargs)
+        # check for each name of param if value has the declared type
+        for name, value in bound_args.arguments.items():
+            if name in sig.parameters:
+                param = sig.parameters[name]
+                if (param.annotation != param.empty
+                        and not isinstance(value, param.annotation)):
+                    print(f"Expected type '{param.annotation}' for argument " \
+                          f"'{name}' but got {type(value)}.")
+                    return None
+        return func(*args, **kwargs)
+    return wrapper
 
 # specific data structure
 class ModelWithInfos:
