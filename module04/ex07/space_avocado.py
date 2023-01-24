@@ -17,7 +17,7 @@ sys.path.insert(1, os.path.join(os.path.dirname(__file__), '..', 'ex06'))
 from ridge import MyRidge
 
 # Global params
-max_iter = 100
+max_iter = 1000000
 alpha = 1e-1
 
 # specific data structure
