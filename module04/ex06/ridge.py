@@ -1,16 +1,23 @@
 """
 Ridge regression :  linear regression regularized with L2
 """
+# -----------------------------------------------------------------------------
+# Module imports
+# -----------------------------------------------------------------------------
+# system
+import os
 import sys
-import inspect
+# nd arrays
 import numpy as np
+# for decorators
+import inspect
 from functools import wraps
 
 
 # -----------------------------------------------------------------------------
 # decorators
 # -----------------------------------------------------------------------------
-# generic type validation based on type annotation in function signature
+# generic type validation based on type annotation in function's signature
 def type_validator(func):
     """
     Decorator that will rely on the types and attributes declaration in the
@@ -36,6 +43,99 @@ def type_validator(func):
                     return None
         return func(*args, **kwargs)
     return wrapper
+
+# generic nd array shape validation based on function's signature
+def shape_validator(shape_mapping: dict):
+    """
+    Decorator that will loop on the attributes in function signature and for
+    each one checks if a specific 2D shape is expected in the dictionnary
+    provided to the decorator.
+    If the expected shape is not the current shape, the decorator prints an
+    error and return None.
+    This decorator does not do a lot of type checks, it must be verified before
+    """
+    def decorator(func):
+        # extract information about the function's parameters.
+        sig = inspect.signature(func)
+        # preserve name and docstring of decorated function
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            # init m and n so they can be used for comparison
+            m_n: list = [None, None]
+            # check positional arguments
+            for i, (param_name, param) in enumerate(sig.parameters.items()):
+                if param.annotation == np.ndarray and i < len(args):
+                    arg = args[i]
+                    expected_shape = shape_mapping.get(param_name)
+                    # check the shape if there is something to check
+                    if expected_shape is not None:
+                        # dim check
+                        if arg.ndim != 2:
+                            print(f"function '{func.__name__}' : " \
+                                  f"wrong dimension on '{param_name}'")
+                            return None
+                        # shape check
+                        if not shape_ok(expected_shape, arg.shape, m_n):
+                            print(f"function '{func.__name__}' : " \
+                                  f"{param_name} has an invalid shape. "\
+                                  f"Expected {expected_shape}, " \
+                                  f"got {arg.shape}.")
+                            return None
+
+            # check keyword arguments
+            for arg_name, expected_shape in shape_mapping.items():
+                param = sig.parameters.get(arg_name)
+                if param and param.annotation == np.ndarray:
+                    arg = kwargs.get(arg_name)
+                    if arg:
+                        # dim check
+                        if arg.ndim != 2:
+                            print(f"function '{func.__name__}' : " \
+                                  f"wrong dimension on '{param_name}'")
+                            return None
+                        # shape check
+                        if not shape_ok(expected_shape, arg.shape, m_n):
+                            print(f"function '{func.__name__}' : " \
+                                  f"{param_name} has an invalid shape. "\
+                                  f"Expected {expected_shape}, " \
+                                  f"got {arg.shape}.")
+                            return None
+
+            return func(*args, **kwargs)
+        return wrapper
+    return decorator
+
+
+# decorator helper
+def shape_ok(expected_shape: tuple, actual_shape: tuple, m_n: list) -> bool:
+    """
+    Helper to calculate if the expected shape matches the actual shape,
+    taking m and n possibilities in account
+    """
+    m, n = expected_shape
+    am, an = actual_shape
+    # Generic check
+    if expected_shape == actual_shape:
+        return True
+    # numeric dimensions
+    if isinstance(m, int) and m != am:
+        return False
+    if isinstance(n, int) and n != an:
+        return False
+    # Specific dimensions 'm', 'n', 'n + 1'
+    if m == 'm' and m_n[0] is not None and am != m_n[0]:
+        return False
+    if n == 'n' and m_n[1] is not None and an != m_n[1]:
+        return False
+    if m == 'n + 1' and m_n[1] is not None and am != m_n[1] + 1:
+        return False
+    # if the param is the first with specific dimensions to be tested
+    if m == 'm' and m_n[0] is None:
+        m_n[0] = am
+    if n == 'n' and m_n[1] is None:
+        m_n[1] = an
+    return True
+
 
 # regulatization of loss
 def regularize_loss(func):
