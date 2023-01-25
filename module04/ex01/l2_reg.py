@@ -1,8 +1,22 @@
 """L2 regression module"""
+# -----------------------------------------------------------------------------
+# Module imports
+# -----------------------------------------------------------------------------
+# system
+import os
 import sys
+# nd arrays
 import numpy as np
+# user modules
+sys.path.insert(1, os.path.join(os.path.dirname(__file__), '..', 'ex06'))
+from ridge import type_validator, shape_validator
 
 
+# -----------------------------------------------------------------------------
+# L2 regularization
+# -----------------------------------------------------------------------------
+@type_validator
+@shape_validator({'theta': ('n', 1)})
 def iterative_l2(theta: np.ndarray) -> float:
     """
     Computes the L2 regularization of a non-empty numpy.ndarray, with a
@@ -16,26 +30,18 @@ def iterative_l2(theta: np.ndarray) -> float:
         This function should not raise any Exception.
     """
     try:
-        # type test
-        if not isinstance(theta, np.ndarray):
-            print('Something went wrong', file=sys.stderr)
-            return None
-        # shape test
-        if theta.shape[1] != 1:
-            print('Something went wrong', file=sys.stderr)
-            return None
         # iterative l2
         result = 0
         for i in range(theta.shape[0]):
             if i != 0:
                 result += theta[i][0] ** 2
         return result
-
-    except (ValueError, TypeError, AttributeError) as exc:
-        print(exc, file=sys.stderr)
+    except:
         return None
 
 
+@type_validator
+@shape_validator({'theta': ('n', 1)})
 def l2(theta: np.ndarray) -> float:
     """
     Computes the L2 regularization of a non-empty numpy.ndarray, without any
@@ -49,24 +55,17 @@ def l2(theta: np.ndarray) -> float:
         This function should not raise any Exception.
     """
     try:
-        # type test
-        if not isinstance(theta, np.ndarray):
-            print('Something went wrong', file=sys.stderr)
-            return None
-        # shape test
-        if theta.shape[1] != 1:
-            print('Something went wrong', file=sys.stderr)
-            return None
         # l2
         theta_prime = theta
         theta_prime[0][0] = 0
         return theta_prime.T.dot(theta_prime)[0][0]
-
-    except (ValueError, TypeError, AttributeError) as exc:
-        print(exc, file=sys.stderr)
+    except:
         return None
 
 
+# -----------------------------------------------------------------------------
+# Tests
+# -----------------------------------------------------------------------------
 if __name__ == "__main__":
 
     x = np.array([2, 14, -13, 5, 12, 4, -19]).reshape((-1, 1))

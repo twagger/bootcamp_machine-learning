@@ -4,23 +4,35 @@ This program performs the training of all the models and save the parameters
 of the different models into a file.
 In models.csv are the parameters of all the models I have explored and trained.
 """
-# general modules
-import os
+# -----------------------------------------------------------------------------
+# Module imports
+# -----------------------------------------------------------------------------
+# system
 import sys
-import itertools
+import os
 import inspect
+import itertools
+# multi-threading
 import concurrent.futures
+# nd arrays and dataframes + csv import
+import csv
 import numpy as np
 import pandas as pd
-import csv
+# plot
 import matplotlib.pyplot as plt
+# progress bar
 from tqdm import tqdm
+# wrap / decorators
 from functools import wraps
-
 # user modules
+sys.path.insert(1, os.path.join(os.path.dirname(__file__), '..', 'ex01'))
 sys.path.insert(1, os.path.join(os.path.dirname(__file__), '..', 'ex06'))
-from ridge import MyRidge
+from ridge import MyRidge, type_validator, shape_validator
 
+
+# -----------------------------------------------------------------------------
+# Globals
+# -----------------------------------------------------------------------------
 # Global params
 max_iter = 10000
 alpha = 1e-1
@@ -28,34 +40,10 @@ cols = ['w', 'w2', 'w3', 'w4', 'p', 'p2', 'p3', 'p4', 't', 't2', 't3', 't4',
         'wp', 'wp2', 'wp3', 'wp4', 'wt', 'wt2', 'wt3', 'wt4', 'pt', 'pt2',
         'pt3', 'pt4', 'wpt', 'wpt2', 'wpt3', 'wpt4']
 
-# generic type validation based on type annotation in function signature
-def type_validator(func):
-    """
-    Decorator that will rely on the types and attributes declaration in the
-    function's signature to check the actual types of the parameter against the
-    expected types
-    """
-    # extract information about the function's parameters and return type.
-    sig = inspect.signature(func)
-    # preserve name and docstring of decorated function
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        # map the parameter from signature to their corresponding values
-        bound_args = sig.bind(*args, **kwargs)
-        # check for each name of param if value has the declared type
-        for name, value in bound_args.arguments.items():
-            if name in sig.parameters:
-                param = sig.parameters[name]
-                if (param.annotation != param.empty
-                        and not isinstance(value, param.annotation)):
-                    print(f"function '{func.__name__}' : " \
-                          f"expected type '{param.annotation}' for argument " \
-                          f"'{name}' but got {type(value)}.")
-                    return None
-        return func(*args, **kwargs)
-    return wrapper
 
-# specific data structure
+# -----------------------------------------------------------------------------
+# Classes
+# -----------------------------------------------------------------------------
 class ModelWithInfos:
     """
     Generic very small class to store model with basic infos such as the name
@@ -66,8 +54,13 @@ class ModelWithInfos:
             setattr(self, key, value)
 
 
-# Data splitter < Copied because the exercice limit the files to use
+# -----------------------------------------------------------------------------
+# Helper functions (Normaly I would import them from modules but if is not
+#                   allowed in this exercice to add files in this folder)
+# -----------------------------------------------------------------------------
+# Data splitter
 @type_validator
+@shape_validator({'x': ('m', 'n'), 'y': ('m', 1)})
 def data_spliter(x: np.ndarray, y: np.ndarray, proportion: float) -> tuple:
     """
     Shuffles and splits the dataset (given by x and y) into a training and a
@@ -87,11 +80,7 @@ def data_spliter(x: np.ndarray, y: np.ndarray, proportion: float) -> tuple:
         This function should not raise any Exception.
     """
     try:
-        # shape test
         m, n = x.shape
-        if y.shape[0] != m or y.shape[1] != 1:
-            print('Something went wrong', file=sys.stderr)
-            return None
         # join x and y and shuffle
         full_set = np.hstack((x, y))
         np.random.shuffle(full_set)
@@ -102,14 +91,13 @@ def data_spliter(x: np.ndarray, y: np.ndarray, proportion: float) -> tuple:
         y_train = full_set[:train_set_len, -1].reshape((-1, 1))
         y_test = full_set[train_set_len:, -1].reshape((-1, 1))
         return (x_train, x_test, y_train, y_test)
-
-    except (ValueError, TypeError, AttributeError) as exc:
-        print(exc, file=sys.stderr)
+    except:
         return None
 
 
 # Polynomial features < Copied because the exercice limit the files to use
 @type_validator
+@shape_validator({'x': ('m', 1)})
 def add_polynomial_features(x: np.ndarray, power: int) -> np.ndarray:
     """
     Add polynomial features to vector x by raising its values up to the power
@@ -127,34 +115,32 @@ def add_polynomial_features(x: np.ndarray, power: int) -> np.ndarray:
         This function should not raise any Exception.
     """
     try:
-        x = x.reshape((-1, 1))
-        # calculation
         result = x.copy()
         for i in range(power - 1):
             result = np.c_[result, x ** (2 + i)]
         return result
-
-    except (ValueError, TypeError, AttributeError) as exc:
-        print(exc, file=sys.stderr)
+    except:
         return None
 
 
 # Data preparation functions
 @type_validator
+@shape_validator({'x': ('m', 'n')})
 def polynomial_matrix(x: np.ndarray, degree: int) -> np.ndarray:
     """return the polynomial matrix for x"""
     try:
         m, n = x.shape
         x_ = np.empty((m, 0))
         for feature in range(n):
-            x_ = np.hstack((x_, add_polynomial_features(x[:, feature], degree)))
+            pol = add_polynomial_features(x[:, feature].reshape(-1, 1), degree)
+            x_ = np.hstack((x_, pol))
         return x_
-    except (ValueError, TypeError, AttributeError) as exc:
-        print(exc, file=sys.stderr)
+    except:
         return None
 
 
 @type_validator
+@shape_validator({'x': ('m', 'n')})
 def combined_features(x: np.ndarray, max: int = 2) -> np.ndarray:
     """
     return the combined features matrix for x where every feature is combined
@@ -168,26 +154,27 @@ def combined_features(x: np.ndarray, max: int = 2) -> np.ndarray:
             for subset in itertools.combinations(x.T, ii):
                 combined = np.c_[combined, np.prod(subset, axis=0)]
         return combined
-    except (AttributeError, ValueError, TypeError) as exc:
-        print(exc, file=sys.stderr)
+    except:
         return None
 
 
 @type_validator
+@shape_validator({'x': ('m', 'n')})
 def normalize_xset(x: np.ndarray) -> np.ndarray:
     """Normalize each feature an entire set of data"""
     try:
-        x_norm = np.empty((x.shape[0], 0))
-        for feature in range(x.shape[1]):
-            x_norm = np.c_[x_norm, z_score(x[:, feature])]
+        m, n = x.shape
+        x_norm = np.empty((m, 0))
+        for feature in range(n):
+            x_norm = np.c_[x_norm, z_score(x[:, feature].reshape(-1, 1))]
         return x_norm
-    except (AttributeError, TypeError) as exc:
-        print(exc, file=sys.stderr)
+    except:
         return None
 
 
 # Saving to file functions
 @type_validator
+@shape_validator({'thetas': ('n', 1)})
 def save_training(writer, nb_model: int, form: str, thetas: np.ndarray,
                   alpha: float, max_iter: int, lambda_: float, loss: float,
                   train_loss: float):
@@ -196,13 +183,13 @@ def save_training(writer, nb_model: int, form: str, thetas: np.ndarray,
         thetas_str = ','.join([f'{theta[0]}' for theta in thetas])
         writer.writerow([nb_model, form, thetas_str, alpha, max_iter, lambda_,
                          loss, train_loss])
-    except (AttributeError, TypeError, ValueError) as exc:
-        print(exc, file=sys.stderr)
+    except:
         return None
 
 
 # normalization function
 @type_validator
+@shape_validator({'x': ('m', 1)})
 def z_score(x: np.ndarray) -> np.ndarray:
     """
     Computes the normalized version of a non-empty numpy.ndarray using the
@@ -216,21 +203,18 @@ def z_score(x: np.ndarray) -> np.ndarray:
         This function shouldn't raise any Exception.
     """
     try:
-        # shape test
-        x = x.reshape((-1, 1))
-        # normalization
         z_score_formula = lambda x, std, mean: (x - mean) / std
         zscore_normalize = np.vectorize(z_score_formula)
         x_prime = zscore_normalize(x, np.std(x), np.mean(x))
         return x_prime
-
-    except (ValueError, TypeError, AttributeError) as exc:
-        print(exc, file=sys.stderr)
+    except:
         return None
 
 
 # model training function to push it to multithreading
 @type_validator
+@shape_validator({'X_train': ('m', 'n'), 'Y_train': ('m', 1)})
+@shape_validator({'X_val': ('m', 'n'), 'Y_val': ('m', 1)})
 def train_model(model: ModelWithInfos, X_train: np.ndarray,
                 y_train: np.ndarray, X_val: np.ndarray, y_val: np.ndarray):
     """Train the model and save information about its performance"""
@@ -245,8 +229,7 @@ def train_model(model: ModelWithInfos, X_train: np.ndarray,
         # Model metrics : train vs cross validation
         model.train_loss = model.m.loss_(y_train, model.m.predict_(X_train))
         model.loss = model.m.loss_(y_val, model.m.predict_(X_val))
-    except (ValueError, TypeError, AttributeError) as exc:
-        print(exc, file=sys.stderr)
+    except:
         return None
 
 
@@ -440,7 +423,7 @@ if __name__ == "__main__":
     plt.title('Loss per model depending on regularization lambda')
     plt.xlabel('Lambda')
     plt.ylabel('Loss')
-    for i in range(0, len(models), 6): # loop on every model, step 5
+    for i in range(0, len(models), 6): # loop on every model, step 6
         model_x = np.empty((0, 1))
         model_y = np.empty((0, 1))
         label = f'{((i / 6) % 4) + 1} degree(s)' \
@@ -475,15 +458,18 @@ if __name__ == "__main__":
     plt.ylabel('Price')
     plt.subplot(1,3,1)
     plt.xlabel('Weight')
-    plt.scatter(X_test[:, 0], y_test, label='True')
-    plt.scatter(X_test[:, 0], y_hat, label='Predicted', marker='x')
+    plt.scatter(X_test[:, features.index('w')], y_test, label='True')
+    plt.scatter(X_test[:, features.index('w')], y_hat, label='Predicted',
+                marker='x')
     plt.subplot(1,3,2)
     plt.xlabel('Production distance')
-    plt.scatter(X_test[:, 4], y_test, label='True')
-    plt.scatter(X_test[:, 4], y_hat, label='Predicted', marker='x')
+    plt.scatter(X_test[:, features.index('p')], y_test, label='True')
+    plt.scatter(X_test[:, features.index('p')], y_hat, label='Predicted',
+                marker='x')
     plt.subplot(1,3,3)
     plt.xlabel('Time delivery')
-    plt.scatter(X_test[:, 8], y_test, label='True')
-    plt.scatter(X_test[:, 8], y_hat, label='Predicted', marker='x')
+    plt.scatter(X_test[:, features.index('t')], y_test, label='True')
+    plt.scatter(X_test[:, features.index('t')], y_hat, label='Predicted',
+                marker='x')
     plt.legend()
     plt.show()

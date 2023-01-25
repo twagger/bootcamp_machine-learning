@@ -1,28 +1,22 @@
 """Regularized linear gradient"""
+# -----------------------------------------------------------------------------
+# Module imports
+# -----------------------------------------------------------------------------
+# system
+import os
 import sys
+# nd arrays
 import numpy as np
+# user modules
+sys.path.insert(1, os.path.join(os.path.dirname(__file__), '..', 'ex06'))
+from ridge import type_validator, shape_validator
 
 
-def input_validator(func):
-    """Input validator for np arrays"""
-    def wrapper(*args, **kwargs):
-        y, x, theta, lambda_ = args
-        if (not isinstance(y, np.ndarray) or not isinstance(x, np.ndarray)
-                or not isinstance(theta, np.ndarray)):
-            print('Something went wrong', file=sys.stderr)
-            return None
-        if (y.shape[1] != 1 or theta.shape[1] != 1
-                or x.shape[0] != y.shape[0]
-                or theta.shape[0] != x.shape[1] + 1):
-            print('Something went wrong', file=sys.stderr)
-            return None
-        if not isinstance(lambda_, float):
-            print('Something went wrong', file=sys.stderr)
-            return None
-        return func(*args, **kwargs)
-    return wrapper
-
-@input_validator
+# -----------------------------------------------------------------------------
+# Regularized linear regression gradient
+# -----------------------------------------------------------------------------
+@type_validator
+@shape_validator({'y': ('m', 1), 'x': ('m', 'n'), 'theta': ('n + 1', 1)})
 def reg_linear_grad(y: np.ndarray, x: np.ndarray, theta: np.ndarray,
                     lambda_: float) -> np.ndarray:
     """
@@ -61,7 +55,9 @@ def reg_linear_grad(y: np.ndarray, x: np.ndarray, theta: np.ndarray,
         print(exc)
         return None
 
-@input_validator
+
+@type_validator
+@shape_validator({'y': ('m', 1), 'x': ('m', 'n'), 'theta': ('n + 1', 1)})
 def vec_reg_linear_grad(y: np.ndarray, x: np.ndarray, theta: np.ndarray,
                         lambda_: float) -> np.ndarray:
     """
@@ -95,6 +91,9 @@ def vec_reg_linear_grad(y: np.ndarray, x: np.ndarray, theta: np.ndarray,
         return None
 
 
+# -----------------------------------------------------------------------------
+# Tests
+# -----------------------------------------------------------------------------
 if __name__ == "__main__":
 
     x = np.array([[ -6, -7, -9],

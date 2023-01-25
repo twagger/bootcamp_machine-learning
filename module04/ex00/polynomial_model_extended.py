@@ -1,8 +1,25 @@
 """Polynomial model feature"""
+# -----------------------------------------------------------------------------
+# Module imports
+# -----------------------------------------------------------------------------
+# system
+import os
 import sys
+# nd arrays
 import numpy as np
+# decorators utils
+import inspect
+from functools import wraps
+# user modules
+sys.path.insert(1, os.path.join(os.path.dirname(__file__), '..', 'ex06'))
+from ridge import type_validator, shape_validator
 
 
+# -----------------------------------------------------------------------------
+# Add polynomial features
+# -----------------------------------------------------------------------------
+@type_validator
+@shape_validator({'x': ('m', 'n')})
 def add_polynomial_features(x: np.ndarray, power: int) -> np.ndarray:
     """
     Add polynomial features to matrix x by raising its columns to every power
@@ -18,21 +35,17 @@ def add_polynomial_features(x: np.ndarray, power: int) -> np.ndarray:
         This function should not raise any Exception.
     """
     try:
-        # type check
-        if not isinstance(x, np.ndarray) or not isinstance(power, int):
-            print("Something went wrong", file=sys.stderr)
-            return None
-        # calculation
         result = x.copy()
         for i in range(power - 1):
             result = np.c_[result, x ** (2 + i)]
         return result
-
-    except (ValueError, TypeError, AttributeError) as exc:
-        print(exc, file=sys.stderr)
+    except:
         return None
 
 
+# -----------------------------------------------------------------------------
+# Tests
+# -----------------------------------------------------------------------------
 if __name__ == "__main__":
 
     x = np.arange(1,11).reshape(5, 2)

@@ -1,134 +1,18 @@
 """My Logistic Regression module"""
-import math
+# -----------------------------------------------------------------------------
+# Module imports
+# -----------------------------------------------------------------------------
+# system
+import os
 import sys
+# nd arrays
 import numpy as np
-import pandas as pd
-import inspect
-from functools import wraps
-
-
-# -----------------------------------------------------------------------------
-# decorators
-# -----------------------------------------------------------------------------
-# generic type validation based on type annotation in function signature
-def type_validator(func):
-    """
-    Decorator that will rely on the types and attributes declaration in the
-    function's signature to check the actual types of the parameter against the
-    expected types
-    """
-    # extract information about the function's parameters and return type.
-    sig = inspect.signature(func)
-    # preserve name and docstring of decorated function
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        # map the parameter from signature to their corresponding values
-        bound_args = sig.bind(*args, **kwargs)
-        # check for each name of param if value has the declared type
-        for name, value in bound_args.arguments.items():
-            if name in sig.parameters:
-                param = sig.parameters[name]
-                if (param.annotation != param.empty
-                        and not isinstance(value, param.annotation)):
-                    print(f"function '{func.__name__}' : " \
-                          f"expected type '{param.annotation}' for argument " \
-                          f"'{name}' but got {type(value)}.")
-                    return None
-        return func(*args, **kwargs)
-    return wrapper
-
-
-# shape validation (a bit long and not very elegant. I should redo it)
-def shape_validator(shape_mapping: dict):
-    def decorator(func):
-        @wraps(func)
-        def wrapper(self, *args, **kwargs):
-            m_value: int = None
-            n_value = self.theta.shape[0] - 1 \
-                      if isinstance(self, MyLogisticRegression) else None
-            for nparray_name, expected_shape in shape_mapping.items():
-                if hasattr(self, nparray_name):
-                    arr = getattr(self, nparray_name)
-
-                    # type and dim check to avoid possible exception later
-                    if not isinstance(arr, np.ndarray):
-                        print(f'{nparray_name} must be a numpy array',
-                              file=sys.stderr)
-                        return None
-                    if arr.ndim != 2:
-                        print(f'{nparray_name} must be 2D array',
-                              file=sys.stderr)
-                        return None
-
-                    # type and value checks on expected shape
-                    if not (isinstance(expected_shape, tuple)
-                            and len(expected_shape) != 2):
-                        print(f'{expected_shape} must be a tuple of 2 values',
-                              file=sys.stderr)
-                        return None
-
-                    # shape test
-                    m, n = expected_shape
-                    # Generic check
-                    if expected_shape == arr.shape:
-                        continue
-                    # Specific dimensions
-                    if m == 'm':
-                        if m_value is None:
-                            m_value = arr.shape[0]
-                        elif m_value != arr.shape[0]:
-                            print(f'{nparray_name} has an invalid shape on ' \
-                                  f'dimension 0. Expected {m_value}, got ' \
-                                  f'{arr.shape[0]}.')
-                            return None
-                    if n == 'n':
-                        if n_value is None:
-                            n_value = arr.shape[1]
-                        elif n_value != arr.shape[1]:
-                            print(f'{nparray_name} has an invalid shape on ' \
-                                  f'dimension 1. Expected {n_value}, got ' \
-                                  f'{arr.shape[1]}.')
-                            return None
-                    if m == 'n + 1':
-                        if n_value is None:
-                            print(f'wrong parameter order. ' \
-                                  f'You must define n before n + 1.')
-                            return None
-                        elif n_value + 1 != arr.shape[0]:
-                            print(f'{nparray_name} has an invalid shape on ' \
-                                  f'dimension 0. Expected {n_value}, got ' \
-                                  f'{arr.shape[0]}.')
-                            return None
-            return func(self, *args, **kwargs)
-        return wrapper
-    return decorator
-
-
-# regulatization of loss
-def regularize_loss(func):
-    @wraps(func)
-    def wrapper(self, *args, **kwargs):
-        y, y_hat = args
-        m, _ = y.shape
-        loss = func(self, y, y_hat)
-        regularization_term = (self.lambda_ / (2 * m)) * l2(theta)
-        return loss + regularization_term
-    return wrapper
-
-
-# regulatization of gradient
-def regularize_grad(func):
-    @wraps(func)
-    def wrapper(self, *args, **kwargs):
-        x, y = args
-        m, _ = x.shape
-        gradient = func(self, x, y)
-        # add regularization
-        theta_prime = self.thetas.copy()
-        theta_prime[0][0] = 0
-        return gradient + (self.lambda_ * theta_prime) / m
-    return wrapper
-
+# user modules
+sys.path.insert(1, os.path.join(os.path.dirname(__file__), '..', 'ex01'))
+sys.path.insert(1, os.path.join(os.path.dirname(__file__), '..', 'ex06'))
+from l2_reg import l2
+from ridge import type_validator, shape_validator, \
+                  regularize_grad, regularize_loss
 
 # -----------------------------------------------------------------------------
 # helper function
@@ -153,37 +37,6 @@ def sigmoid_(x: np.ndarray) -> np.ndarray:
         return None
 
 
-# L2 regularization
-@type_validator
-def l2(theta: np.ndarray) -> float:
-    """
-    Computes the L2 regularization of a non-empty numpy.ndarray, without any
-        for-loop.
-    Args:
-        theta: has to be a numpy.ndarray, a vector of shape n * 1.
-    Returns:
-        The L2 regularization as a float.
-        None if theta in an empty numpy.ndarray.
-    Raises:
-        This function should not raise any Exception.
-    """
-    try:
-        # type test
-        if not isinstance(theta, np.ndarray):
-            print('thetas must be a numpy array', file=sys.stderr)
-            return None
-        # shape test
-        if theta.shape[1] != 1:
-            print('wrong shape on parameter', file=sys.stderr)
-            return None
-        # l2
-        theta_prime = theta
-        theta_prime[0][0] = 0
-        return theta_prime.T.dot(theta_prime)[0][0]
-
-    except:
-        return None
-
 # -----------------------------------------------------------------------------
 # MyLogisticRegression class with l2 regularization
 # -----------------------------------------------------------------------------
@@ -196,12 +49,13 @@ class MyLogisticRegression():
     supported_penalties = ['l2']
 
     @type_validator
-    def __init__(self, theta: np.ndarray, alpha: float = 0.001,
+    @shape_validator({'thetas': ('n', 1)})
+    def __init__(self, thetas: np.ndarray, alpha: float = 0.001,
                  max_iter: int = 1000, penalty: str = 'l2',
                  lambda_: float = 1.0):
         self.alpha = alpha
         self.max_iter = max_iter
-        self.theta = np.array(theta).reshape((-1, 1))
+        self.thetas = np.array(thetas).reshape((-1, 1))
         self.penalty = penalty
         self.lambda_ = lambda_ if penalty in self.supported_penalties else 0
 
@@ -223,7 +77,7 @@ class MyLogisticRegression():
         try:
             m, _ = x.shape
             x_prime = np.c_[np.ones((m, 1)), x]
-            return sigmoid_(x_prime.dot(self.theta))
+            return sigmoid_(x_prime.dot(self.thetas))
         except:
             return None
 
@@ -304,7 +158,7 @@ class MyLogisticRegression():
         try:
             m, _ = x.shape
             x_prime = np.c_[np.ones((m, 1)), x]
-            y_hat = x_prime.dot(self.theta)
+            y_hat = x_prime.dot(self.thetas)
             return x_prime.T.dot(y_hat - y) / m
         except:
             return None
@@ -337,27 +191,30 @@ class MyLogisticRegression():
                 y_hat = self.predict_(x)
                 gradient = self.gradient_(x, y)
                 # 4. calculate and assign the new thetas
-                self.theta -= self.alpha * gradient
-            return self.theta
+                self.thetas -= self.alpha * gradient
+            return self.thetas
         except:
             return None
 
 
+# -----------------------------------------------------------------------------
+# Tests
+# -----------------------------------------------------------------------------
 if __name__ == "__main__":
 
-    theta = np.array([[-2.4], [-1.5], [0.3], [-1.4], [0.7]])
+    thetas = np.array([[-2.4], [-1.5], [0.3], [-1.4], [0.7]])
 
     # Example 1:
-    model1 = MyLogisticRegression(theta, lambda_=5.0)
+    model1 = MyLogisticRegression(thetas, lambda_=5.0)
     print(model1.penalty) # -> 'l2'
     print(model1.lambda_) # -> 5.0
 
     # Example 2:
-    model2 = MyLogisticRegression(theta, penalty='none')
+    model2 = MyLogisticRegression(thetas, penalty='none')
     print(model2.penalty) # -> None
     print(model2.lambda_) # -> 0.0
 
     # Example 3:
-    model3 = MyLogisticRegression(theta, penalty='none', lambda_=2.0)
+    model3 = MyLogisticRegression(thetas, penalty='none', lambda_=2.0)
     print(model3.penalty) # -> None
     print(model3.lambda_) # -> 0.0

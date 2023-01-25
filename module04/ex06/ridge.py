@@ -12,7 +12,9 @@ import numpy as np
 # for decorators
 import inspect
 from functools import wraps
-
+# user modules
+# no user modules here as it makes it complicated to use this one to import
+# decorators in all others modules
 
 # -----------------------------------------------------------------------------
 # decorators
@@ -87,16 +89,16 @@ def shape_validator(shape_mapping: dict):
                 param = sig.parameters.get(arg_name)
                 if param and param.annotation == np.ndarray:
                     arg = kwargs.get(arg_name)
-                    if arg:
+                    if arg is not None:
                         # dim check
                         if arg.ndim != 2:
                             print(f"function '{func.__name__}' : " \
-                                  f"wrong dimension on '{param_name}'")
+                                  f"wrong dimension on '{arg_name}'")
                             return None
                         # shape check
                         if not shape_ok(expected_shape, arg.shape, m_n):
                             print(f"function '{func.__name__}' : " \
-                                  f"{param_name} has an invalid shape. "\
+                                  f"{arg_name} has an invalid shape. "\
                                   f"Expected {expected_shape}, " \
                                   f"got {arg.shape}.")
                             return None
@@ -106,7 +108,7 @@ def shape_validator(shape_mapping: dict):
     return decorator
 
 
-# decorator helper
+# shape decorator helper
 def shape_ok(expected_shape: tuple, actual_shape: tuple, m_n: list) -> bool:
     """
     Helper to calculate if the expected shape matches the actual shape,
@@ -125,6 +127,8 @@ def shape_ok(expected_shape: tuple, actual_shape: tuple, m_n: list) -> bool:
     # Specific dimensions 'm', 'n', 'n + 1'
     if m == 'm' and m_n[0] is not None and am != m_n[0]:
         return False
+    if m == 'n' and m_n[1] is not None and am != m_n[1]:
+        return False
     if n == 'n' and m_n[1] is not None and an != m_n[1]:
         return False
     if m == 'n + 1' and m_n[1] is not None and am != m_n[1] + 1:
@@ -132,6 +136,8 @@ def shape_ok(expected_shape: tuple, actual_shape: tuple, m_n: list) -> bool:
     # if the param is the first with specific dimensions to be tested
     if m == 'm' and m_n[0] is None:
         m_n[0] = am
+    if m == 'n' and m_n[1] is None:
+        m_n[1] = am
     if n == 'n' and m_n[1] is None:
         m_n[1] = an
     return True
@@ -168,12 +174,13 @@ def regularize_grad(func):
 # -----------------------------------------------------------------------------
 # L2 regularization
 @type_validator
-def l2(thetas: np.ndarray) -> float:
+@shape_validator({'theta': ('n', 1)})
+def l2(theta: np.ndarray) -> float:
     """
     Computes the L2 regularization of a non-empty numpy.ndarray, without any
         for-loop.
     Args:
-        thetas: has to be a numpy.ndarray, a vector of shape n * 1.
+        theta: has to be a numpy.ndarray, a vector of shape n * 1.
     Returns:
         The L2 regularization as a float.
         None if theta in an empty numpy.ndarray.
@@ -181,33 +188,26 @@ def l2(thetas: np.ndarray) -> float:
         This function should not raise any Exception.
     """
     try:
-        # type test
-        if not isinstance(thetas, np.ndarray):
-            print('thetas must be a numpy array', file=sys.stderr)
-            return None
-        # shape test
-        if thetas.shape[1] != 1:
-            print('wrong shape on parameter', file=sys.stderr)
-            return None
-        # l2
-        theta_prime = thetas.copy()
+        theta_prime = theta.copy()
         theta_prime[0][0] = 0
         return theta_prime.T.dot(theta_prime)[0][0]
-
     except:
         return None
 
 
-# my Linear regression class from previous module for inheritance
-# normaly I should import this from another file but the files we can return in
-# this exercise are limited to this one only so I copied the code directly in 
-# it
+# -----------------------------------------------------------------------------
+# MyLinearRegression class : normaly I should import this from another file but
+#                            the files we can return in this exercise are 
+#                            limited to this one only so I copied the code 
+#                            directly in it
+# -----------------------------------------------------------------------------
 class MyLinearRegression():
     """
     Description:
     My personnal linear regression class to fit like a boss.
     """
     @type_validator
+    @shape_validator({'thetas': ('n', 1)})
     def __init__(self, thetas: np.ndarray, alpha: float = 0.001,
                  max_iter: int = 1000):
         """Constructor"""
@@ -216,6 +216,7 @@ class MyLinearRegression():
         self.thetas = np.array(thetas).reshape((-1, 1))
 
     @type_validator
+    @shape_validator({'x': ('m', 'n')})
     def predict_(self, x: np.ndarray) -> np.ndarray:
         """
         Computes the vector of prediction y_hat from two non-empty numpy.array.
@@ -230,17 +231,14 @@ class MyLinearRegression():
             This function should not raise any Exceptions.
         """
         try:
-            # shape test
-            m, n = x.shape
-            if self.thetas.shape[0] != n + 1:
-                print('wrong shape on parameter', file=sys.stderr)
-                return None
+            m, _ = x.shape
             x_prime = np.c_[np.ones((m, 1)), x]
             return x_prime.dot(self.thetas)
         except:
             return None
 
-    @type_validator    
+    @type_validator
+    @shape_validator({'y': ('m', 1), 'y_hat': ('m', 1)})
     def loss_elem_(self, y: np.ndarray, y_hat: np.ndarray) -> np.ndarray:
         """
         Description:
@@ -258,13 +256,12 @@ class MyLinearRegression():
             This function should not raise any Exception.
         """
         try:
-            y = y.reshape((-1, 1))
-            y_hat = y_hat.reshape((-1, 1))
             return (y_hat - y) ** 2
         except:
             return None
 
     @type_validator
+    @shape_validator({'y': ('m', 1), 'y_hat': ('m', 1)})
     def loss_(self, y: np.ndarray, y_hat: np.ndarray) -> float:
         """
         Computes the half mean squared error of two non-empty numpy.array,
@@ -281,13 +278,14 @@ class MyLinearRegression():
             This function should not raise any Exceptions.
         """
         try:
-            loss_vector = self.loss_elem_(y, y_hat)
             m, _ = y.shape
+            loss_vector = self.loss_elem_(y, y_hat)
             return float((np.sum(loss_vector) / (2 * m)))
         except:
             return None
 
     @type_validator
+    @shape_validator({'x': ('m', 'n'), 'y': ('m', 1)})
     def gradient_(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
         """
         Computes the regularized linear gradient of three non-empty
@@ -305,20 +303,15 @@ class MyLinearRegression():
             This function should not raise any Exception.
         """
         try:
-            # shape test
             m, _ = x.shape
-            if y.shape[0] != m or y.shape[1] != 1:
-                print("wrong shape on parameter", file=sys.stderr)
-            # computation
             x_prime = np.c_[np.ones((m, 1)), x]
             y_hat = x_prime.dot(self.thetas)
             return x_prime.T.dot(y_hat - y) / m
-
-        except (ValueError, TypeError, AttributeError) as exc:
-            print(exc, file=sys.stderr)
+        except:
             return None
 
     @type_validator
+    @shape_validator({'x': ('m', 'n'), 'y': ('m', 1)})
     def fit_(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
         """
         Description:
@@ -335,13 +328,9 @@ class MyLinearRegression():
             This function should not raise any Exception.
         """
         try:
-            # shape test
-            m, _ = x.shape
-            if (y.shape[0] != m or y.shape[1] != 1):
-                print('wrong shape on parameter', file=sys.stderr)
-                return None
             # calculation of the gradient vector
             # 1. X to X'
+            m, _ = x.shape
             x_prime = np.c_[np.ones((m, 1)), x]
             # 2. loop
             for _ in range(self.max_iter):
@@ -350,11 +339,13 @@ class MyLinearRegression():
                 # 4. calculate and assign the new thetas
                 self.thetas -= self.alpha * gradient
             return self.thetas
-
         except:
             return None
 
 
+# -----------------------------------------------------------------------------
+# MyLinearRegression class with l2 regularization : MyRidge
+# -----------------------------------------------------------------------------
 class MyRidge(MyLinearRegression):
     """
     Description:
@@ -362,6 +353,7 @@ class MyRidge(MyLinearRegression):
     """
 
     @type_validator
+    @shape_validator({'thetas': ('n', 1)})
     def __init__(self, thetas: np.ndarray, alpha: float = 0.001,
                  max_iter: int = 1000, lambda_: float = 0.5):
         super().__init__(thetas, alpha=alpha, max_iter=max_iter)
@@ -372,6 +364,7 @@ class MyRidge(MyLinearRegression):
         return (self.alpha, self.max_iter, self.lambda_, self.thetas)
 
     @type_validator
+    @shape_validator({'thetas': ('n', 1)})
     def set_params_(self, thetas: np.ndarray = None, alpha: float = None,
                     max_iter: int = None, lambda_: float = None):
         """Update the parameters of the model"""
@@ -385,13 +378,19 @@ class MyRidge(MyLinearRegression):
             self.thetas = np.array(thetas).reshape((-1, 1))
 
     @type_validator
+    @shape_validator({'y': ('m', 1), 'y_hat': ('m', 1)})
     @regularize_loss
     def loss_(self, y: np.ndarray, y_hat: np.ndarray) -> np.ndarray:
         return super().loss_(y, y_hat)
 
     @type_validator
+    @shape_validator({'x': ('m', 'n'), 'y': ('m', 1)})
     @regularize_grad
     def gradient_(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
         return super().gradient_(x, y)
 
+
+# -----------------------------------------------------------------------------
+# Tests
+# -----------------------------------------------------------------------------
 # this module is tested in next exercise

@@ -1,10 +1,24 @@
-"""Linear loss regression mmodule"""
-import numpy as np
+"""Linear loss regression module"""
+# -----------------------------------------------------------------------------
+# Module imports
+# -----------------------------------------------------------------------------
+# system
+import os
 import sys
-sys.path.insert(1, '../ex01/')
+# nd arrays
+import numpy as np
+# user modules
+sys.path.insert(1, os.path.join(os.path.dirname(__file__), '..', 'ex01'))
+sys.path.insert(1, os.path.join(os.path.dirname(__file__), '..', 'ex06'))
+from ridge import type_validator, shape_validator
 from l2_reg import l2
 
 
+# -----------------------------------------------------------------------------
+# Regularized linear regression loss
+# -----------------------------------------------------------------------------
+@type_validator
+@shape_validator({'y': ('m', 1), 'y_hat': ('m', 1), 'theta': ('n', 1)})
 def reg_loss_(y: np.ndarray, y_hat: np.ndarray, theta: np.ndarray,
               lambda_: float) -> float:
     """
@@ -22,18 +36,7 @@ def reg_loss_(y: np.ndarray, y_hat: np.ndarray, theta: np.ndarray,
         This function should not raise any Exception.
     """
     try:
-        # type test
-        if (not isinstance(y, np.ndarray) or not isinstance(y_hat, np.ndarray)
-                or not isinstance(theta, np.ndarray)
-                or not isinstance(lambda_, float)):
-            print('Something went wrong', file=sys.stderr)
-            return None
-        # shape test
-        m, n = y.shape
-        if (y.shape != y_hat.shape or theta.shape[1] != 1 or n != 1):
-            print('Something went wrong', file=sys.stderr)
-            return None
-        # computation
+        m, _ = y.shape
         loss = float((((y_hat - y).T.dot(y_hat - y)) / (2 * m))[0][0])
         regularization_term = (lambda_ / (2 * m)) * l2(theta)
         return loss + regularization_term
@@ -42,6 +45,10 @@ def reg_loss_(y: np.ndarray, y_hat: np.ndarray, theta: np.ndarray,
         print(exc, file=sys.stderr)
         return None
 
+
+# -----------------------------------------------------------------------------
+# Tests
+# -----------------------------------------------------------------------------
 if __name__ == "__main__":
 
     y = np.array([2, 14, -13, 5, 12, 4, -19]).reshape((-1, 1))
