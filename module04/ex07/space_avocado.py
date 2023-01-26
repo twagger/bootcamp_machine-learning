@@ -32,7 +32,7 @@ from benchmark_train import ModelWithInfos, data_spliter, \
 # Globals
 # -----------------------------------------------------------------------------
 # Global params
-max_iter = 1000
+max_iter = 100000
 alpha = 1e-1
 cols = ['w', 'w2', 'w3', 'w4', 'p', 'p2', 'p3', 'p4', 't', 't2', 't3', 't4',
         'wp', 'wp2', 'wp3', 'wp4', 'wt', 'wt2', 'wt3', 'wt4', 'pt', 'pt2',

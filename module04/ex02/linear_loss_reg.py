@@ -40,9 +40,7 @@ def reg_loss_(y: np.ndarray, y_hat: np.ndarray, theta: np.ndarray,
         loss = float((((y_hat - y).T.dot(y_hat - y)) / (2 * m))[0][0])
         regularization_term = (lambda_ / (2 * m)) * l2(theta)
         return loss + regularization_term
-
-    except (ValueError, TypeError, AttributeError) as exc:
-        print(exc, file=sys.stderr)
+    except:
         return None
 
 

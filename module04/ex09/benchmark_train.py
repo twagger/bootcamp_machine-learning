@@ -35,7 +35,7 @@ from my_logistic_regression import MyLogisticRegression as MyLogR
 # Globals
 # -----------------------------------------------------------------------------
 # Global params
-max_iter = 10000
+max_iter = 500000
 alpha = 1e-1
 cols = ['w', 'w2', 'w3', 'h', 'h2', 'h3', 'd', 'd2', 'd3']
 
@@ -248,6 +248,16 @@ def tf_metrics(y: np.ndarray, y_hat: np.ndarray, pos_label=None) -> tuple:
     return (tp, fp, tn, fn)
 
 
+def accuracy_score_(y: np.ndarray, y_hat: np.ndarray) -> float:
+    """
+    Compute the accuracy score : how many predictions are correct.
+    """
+    try:
+        tp, fp, tn, fn = tf_metrics(y, y_hat)
+        return (tp + tn) / (tp + fp + tn + fn)
+    except:
+        return None
+
 @type_validator
 @shape_validator({'y': ('m', 1), 'y_hat': ('m', 1)})
 def precision_score_(y: np.ndarray, y_hat: np.ndarray,
@@ -330,7 +340,7 @@ if __name__ == "__main__":
     # -------------------------------------------------------------------------
     # add polynomial features up to degree 3 : w, w2, w3, h, h2, h3, d, d2, d3
     X_poly = polynomial_matrix(X, 3)
-    
+
     # normalize to ease gradient descent
     X_norm = normalize_xset(X_poly)
 
@@ -390,14 +400,14 @@ if __name__ == "__main__":
             model = MyLogR(np.random.rand(10, 1), alpha = alpha,
                            max_iter = max_iter, lambda_ = lambda_)
             save_model(10000 + num, models, model, ['w',
-                                                   'w2',
-                                                   'w3',
-                                                   'h',
-                                                   'h2',
-                                                   'h3',
-                                                   'd',
-                                                   'd2',
-                                                   'd3'])
+                                                    'w2',
+                                                    'w3',
+                                                    'h',
+                                                    'h2',
+                                                    'h3',
+                                                    'd',
+                                                    'd2',
+                                                    'd3'])
 
     # sort the models to regroup then by degree
     models = sorted(models, key=lambda x: x.num)
@@ -427,7 +437,7 @@ if __name__ == "__main__":
         multiclass_f1_score: float = 0.0
         for label in range(4):
             multiclass_f1_score += f1_score_(predict, y_val, pos_label = label)
-        # put the global score on every sub-model
+        # put the global f1-score on every sub-model
         for num in range(4):
             models[i + num].f1_score = multiclass_f1_score
 

@@ -32,16 +32,18 @@ from benchmark_train import ModelWithInfos, data_spliter, \
                             add_polynomial_features, polynomial_matrix, \
                             normalize_xset, z_score, tf_metrics, \
                             precision_score_, recall_score_, f1_score_, \
-                            train_model
+                            train_model, accuracy_score_
 
 
 # -----------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------
 # Global params
-max_iter = 10000
-alpha = 1e-2
+max_iter = 100000
+alpha = 1e-1
 cols = ['w', 'w2', 'w3', 'h', 'h2', 'h3', 'd', 'd2', 'd3']
+planets = ['Venus', 'Earth', 'Mars', 'Belt']
+colors = ['hotpink', 'deepskyblue', 'orangered', 'gold']
 
 
 # -----------------------------------------------------------------------------
@@ -135,7 +137,7 @@ if __name__ == "__main__":
     # train models
     for i in range(len(the_models)):
         # pick random thetas to re-train the model and reset hyperparameters
-        the_models[i].m.thetas = np.random.rand(the_models[i].m.thetas.shape)
+        the_models[i].m.thetas = np.random.rand(the_models[i].m.thetas.shape[0], 1)
         the_models[i].m.alpha = alpha
         the_models[i].m.max_iter = max_iter
         the_models[i].m.f1_score = 0
@@ -144,12 +146,13 @@ if __name__ == "__main__":
             executor.submit(train_model, the_models[i], X_train, y_trains[i])
 
     # -------------------------------------------------------------------------
-    # 6. Evaluate models with F1-score on the test set
+    # 6. Evaluate: evaluate models with F1-score on the test set
     # -------------------------------------------------------------------------
-    # adapt features of X_test
+    # adapt features of X_test according to the best model function
     features = the_models[0].features
     f_indices = [i for i, feat in enumerate(cols) if feat in features]
     X_test = X_test[:, f_indices]
+
     # build a prediction vector the group of 4 models
     predict = np.empty((y_test.shape[0], 0))
     for i in range(4):
@@ -170,11 +173,6 @@ if __name__ == "__main__":
     # here we cannot use the loss function to evaluate the global loss as it
     # expect prediction between 0 and 1
 
-    # Select only the subset of features associated with the best model
-    features = the_models[0].features
-    f_indices = [i for i, feat in enumerate(cols) if feat in features]
-    X_test = X_test[:, f_indices]
-
     # prediction with the best group of models on test set
     predict = np.empty((y_test.shape[0], 0))
     for mod in the_models:
@@ -185,15 +183,26 @@ if __name__ == "__main__":
     # based on the test set.
     nb_pred = len(predict)
     correct_pred = np.sum(y_test == predict)
-    print(f'{"fraction of correct prediction ":33}: '
+    print(f'{"Correct predictions ":20}: '
           f'{correct_pred / nb_pred}'
           f' ({correct_pred}/{nb_pred})')
+    
+    # model metrics (accuracy, precision, recall, f1-score)
+    print(f"{'Accuracy score : ':20}{accuracy_score_(y_test, predict)}")
+    for i, planet in enumerate(planets):
+        print(f'{planet.upper():-<40}')
+        print(f"{'Precision score : ':20}"
+              f"{precision_score_(y_test, predict, pos_label=i)}")
+        print(f"{'Recall score : ':20}"
+              f"{recall_score_(y_test, predict, pos_label=i)}")
+        print(f"{'F1 score : ':20}{f1_score_(y_test, predict, pos_label=i)}")
+
 
     # -------------------------------------------------------------------------
     # 8. plot f1 score per lambda
     # -------------------------------------------------------------------------
-    # sort the models before ploting to regroup then
-    models = sorted(models, key=lambda x: x.num)
+    # sort the models before ploting to regroup then and delete the 9999 ones
+    models = sorted(models[:len(models) - 4], key=lambda x: x.num)
     # plot the loss curve for every model with respect to lambda
     plt.figure()
     plt.title('F1 per model depending on regularization lambda')
@@ -217,20 +226,45 @@ if __name__ == "__main__":
     plt.figure()
     plt.title('Prediction versus true citizenship')
     plt.ylabel('citizenship')
+
+    # colors per planet
+    true_set = []
+    predict_set = []
+    for i, planet in enumerate(planets):
+        t_set = np.c_[X_test, y_test]
+        true_set.append(t_set[t_set[:, -1] == i])
+        p_set = np.c_[X_test, predict]
+        predict_set.append(p_set[p_set[:, -1] == i])
+    
+    # Weight
     plt.subplot(1,3,1)
     plt.xlabel('Weight')
-    plt.scatter(X_test[:, features.index('w')], y_test, label='True')
-    plt.scatter(X_test[:, features.index('w')], predict, label='Predicted',
-                marker='x')
+    for i, planet in enumerate(planets):
+        plt.scatter(true_set[i][:, features.index('w')], true_set[i][:, -1],
+                    label=planet, color=colors[i])
+        plt.scatter(predict_set[i][:, features.index('w')],
+                    predict_set[i][:, -1], label='', marker='x',
+                    color='black')
+    
+    # Height
     plt.subplot(1,3,2)
     plt.xlabel('Height')
-    plt.scatter(X_test[:, features.index('h')], y_test, label='True')
-    plt.scatter(X_test[:, features.index('h')], predict, label='Predicted',
-                marker='x')
+    for i, planet in enumerate(planets):
+        plt.scatter(true_set[i][:, features.index('h')], true_set[i][:, -1],
+                    label=planet, color=colors[i])
+        plt.scatter(predict_set[i][:, features.index('h')],
+                    predict_set[i][:, -1], label='', marker='x',
+                    color='black')
+
+    # Bone density
     plt.subplot(1,3,3)
     plt.xlabel('Bone density')
-    plt.scatter(X_test[:, features.index('d')], y_test, label='True')
-    plt.scatter(X_test[:, features.index('d')], predict, label='Predicted',
-                marker='x')
+    for i, planet in enumerate(planets):
+        plt.scatter(true_set[i][:, features.index('d')], true_set[i][:, -1],
+                    label=planet, color=colors[i])
+        plt.scatter(predict_set[i][:, features.index('d')],
+                    predict_set[i][:, -1],
+                    label=f"{'Predicted' if i == 3 else ''}", marker='x',
+                    color='black')
     plt.legend()
     plt.show()
