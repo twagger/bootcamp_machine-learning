@@ -31,7 +31,8 @@ from my_logistic_regression import MyLogisticRegression as MyLogR
 from benchmark_train import ModelWithInfos, data_spliter, \
                             add_polynomial_features, polynomial_matrix, \
                             normalize_xset, z_score, tf_metrics, \
-                            precision_score_, recall_score_, f1_score_
+                            precision_score_, recall_score_, f1_score_, \
+                            train_model
 
 
 # -----------------------------------------------------------------------------
@@ -117,19 +118,60 @@ if __name__ == "__main__":
                                          f1_score=float(row['f1_score'])))
 
     # -------------------------------------------------------------------------
-    # 4. Train the best model (the last of the file)
+    # 5. Train the best model (the last of the file)
     # -------------------------------------------------------------------------
-    # split data (train and test) and train one multiclass model (check previous module)
+    # extract the best model (group of 4)
+    the_models = models[-4:]
+
+    # create train and test label vectors with only 2 possibilities to train
+    # the sub-models
+    y_trains = []
+    y_tests = []
+    for zipcode in range(4):
+        relabel_log = np.vectorize(lambda x: 1 if x == zipcode else 0)
+        y_trains.append(relabel_log(y_train))
+        y_tests.append(relabel_log(y_test))
+
+    # train models
+    for i in range(len(the_models)):
+        # pick random thetas to re-train the model and reset hyperparameters
+        the_models[i].m.thetas = np.random.rand(the_models[i].m.thetas.shape)
+        the_models[i].m.alpha = alpha
+        the_models[i].m.max_iter = max_iter
+        the_models[i].m.f1_score = 0
+        # train model
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            executor.submit(train_model, the_models[i], X_train, y_trains[i])
 
     # -------------------------------------------------------------------------
-    # 9. Evaluate: fraction of correct predictions over the total number of
+    # 6. Evaluate models with F1-score on the test set
+    # -------------------------------------------------------------------------
+    # adapt features of X_test
+    features = the_models[0].features
+    f_indices = [i for i, feat in enumerate(cols) if feat in features]
+    X_test = X_test[:, f_indices]
+    # build a prediction vector the group of 4 models
+    predict = np.empty((y_test.shape[0], 0))
+    for i in range(4):
+        predict = np.c_[predict, the_models[i].m.predict_(X_test)]
+    predict = np.argmax(predict, axis=1).reshape((-1, 1))
+    # compute the f1-score for the group
+    multiclass_f1_score: float = 0.0
+    for label in range(4):
+        multiclass_f1_score += f1_score_(predict, y_test, pos_label = label)
+    # put the global score on every sub-model
+    for i in range(4):
+        the_models[i].f1_score = multiclass_f1_score
+
+    # -------------------------------------------------------------------------
+    # 7. Evaluate: fraction of correct predictions over the total number of
     #              predictions based on the test set.
     # -------------------------------------------------------------------------
     # here we cannot use the loss function to evaluate the global loss as it
     # expect prediction between 0 and 1
 
     # Select only the subset of features associated with the best model
-    features = the_model.features
+    features = the_models[0].features
     f_indices = [i for i, feat in enumerate(cols) if feat in features]
     X_test = X_test[:, f_indices]
 
@@ -148,7 +190,7 @@ if __name__ == "__main__":
           f' ({correct_pred}/{nb_pred})')
 
     # -------------------------------------------------------------------------
-    # 10. plot f1 score per lambda
+    # 8. plot f1 score per lambda
     # -------------------------------------------------------------------------
     # sort the models before ploting to regroup then
     models = sorted(models, key=lambda x: x.num)
@@ -169,7 +211,7 @@ if __name__ == "__main__":
     plt.show()
 
     # -------------------------------------------------------------------------
-    # 11. plot 3 scatter plots : prediction vs true citizenship per feature
+    # 9. plot 3 scatter plots : prediction vs true citizenship per feature
     # -------------------------------------------------------------------------
     # plot
     plt.figure()

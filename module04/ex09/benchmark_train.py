@@ -35,8 +35,8 @@ from my_logistic_regression import MyLogisticRegression as MyLogR
 # Globals
 # -----------------------------------------------------------------------------
 # Global params
-max_iter = 100000
-alpha = 1e-2
+max_iter = 10000
+alpha = 1e-1
 cols = ['w', 'w2', 'w3', 'h', 'h2', 'h3', 'd', 'd2', 'd3']
 
 
@@ -328,24 +328,24 @@ if __name__ == "__main__":
     # -------------------------------------------------------------------------
     # 2. Data preparation (no cleaning, the dataset is already ok)
     # -------------------------------------------------------------------------
-    # normalize to ease gradient descent
-    X = normalize_xset(X)
-
     # add polynomial features up to degree 3 : w, w2, w3, h, h2, h3, d, d2, d3
     X_poly = polynomial_matrix(X, 3)
+    
+    # normalize to ease gradient descent
+    X_norm = normalize_xset(X_poly)
 
     # switch back to dataframe and relabel columns to ease feature selection
     # during model training
-    df = pd.DataFrame(data=X_poly, columns=cols)
+    df = pd.DataFrame(data=X_norm, columns=cols)
 
     # -------------------------------------------------------------------------
     # 3. Split data : training set / cross validation set / test set (60/20/20)
     # -------------------------------------------------------------------------
-    # split the dataset into a training set and a test set > 80 / 20
-    X_train, X_test, y_train, y_test = data_spliter(X_poly, y, 0.8)
-    # split the train dataset into a training set
-    # and a cross validation set > 80 / 20
-    X_train, X_val, y_train, y_val = data_spliter(X_train, y_train, 0.8)
+    # Split dataset : train / cross validation / test (60/20/20)
+    # train / validation + test (60/40)
+    X_train, X_val_test, y_train, y_val_test = data_spliter(X_norm, y, 0.6)
+    # cross validation / test (50/50)
+    X_test, X_val, y_test, y_val = data_spliter(X_val_test, y_val_test, 0.5)
 
     # -------------------------------------------------------------------------
     # 3. Create train and cross validation label vectors with only 2 outputs
