@@ -14,48 +14,48 @@ The full content of the bootcamp is available on 42 AI's GitHub page : https://g
 
 This module is an introduction to **linear regression**. The main notions that are learned in this module are :
 
-* <u>Matrix and vector operations</u> : scalar product, addition , substractions, multiplications, divisions
-* <u>Basic statistics</u> : mean, median, percentiles, quartiles, variance, standard deviation
-* <u>Prediction</u> : How to use a linear function and basic vector operation to predict values from features
-* <u>Loss function</u> : calculate how bad is our prediction compared to the real data. Multiple loss functions (MSE, RMSE, MAE, R2 score)
-* <u>Plotting</u> : Using matplotlib to draw our first data visualizations
+* **Matrix and vector operations** : scalar product, addition , substractions, multiplications, divisions
+* **Basic statistics** : mean, median, percentiles, quartiles, variance, standard deviation
+* **Prediction** : How to use a linear function and basic vector operation to predict values from features
+* **Loss function** : calculate how bad is our prediction compared to the real data. Multiple loss functions (MSE, RMSE, MAE, R2 score)
+* **Plotting** : Using matplotlib to draw our first data visualizations
 
 ## Module 01 : Gradient descent, normalization
 
 This module is about completing the first one by going further into linear regression. In this module we learn :
 
-* <u>Gradient</u> : what is a gradient vector, how it is calculated and how it can be used to adjust the weights of the prediction function
-* <u>Gradient descent</u> : Optimization algorithm based on gradient calculation
-* <u>Normalization</u> : Why normalize data and how to use z-score and minmax normalization
-* <u>Wrap up all functions into a python class and use it !</u> : Start using all we learned to solve small machine learning problems (with univariate linear regression)
+* **Gradient** : what is a gradient vector, how it is calculated and how it can be used to adjust the weights of the prediction function
+* **Gradient descent** : Optimization algorithm based on gradient calculation
+* **Normalization** : Why normalize data and how to use z-score and minmax normalization
+* **Wrap up all functions into a python class and use it !** : Start using all we learned to solve small machine learning problems (with univariate linear regression)
 
 ## Module 02 : Multivariate linear regression
 
 This module is about multivariate linear regression. We will tackle the problem of having multiple features and using them to do a better prediction. The main notions are :
 
-* <u>Prediction</u> : Adapt it with a linear function that uses multiple features and weights
-* <u>Loss function</u> : Understand the impact on the loss function formula that we used before (no impact)
-* <u>Gradient descent</u> : Adapt gradient descent to properly compute gradient vector and adapt all weights
-* <u>Wrap up all functions into a python class and use it !</u> : Test our updated classes with multiple features dataset
-* <u>Polynomial models</u> : Introduction to polynomial models, what it is, why, when and how to use them.
-* <u>Overfitting</u> : Introduction to the overfitting problem
+* **Prediction** : Adapt it with a linear function that uses multiple features and weights
+* **Loss function** : Understand the impact on the loss function formula that we used before (no impact)
+* **Gradient descent** : Adapt gradient descent to properly compute gradient vector and adapt all weights
+* **Wrap up all functions into a python class and use it !** : Test our updated classes with multiple features dataset
+* **Polynomial models** : Introduction to polynomial models, what it is, why, when and how to use them.
+* **Overfitting** : Introduction to the overfitting problem
 
 ## Module 03 : Logistic regression
 
 This module introduces classification with logistic regression. We will tackle the problem of having multiple features and using them to do a better prediction. The main notions are :
 
-* <u>Sigmoid function</u> : What it is and why use it in classification problems for prediction
-* <u>Cross entropy loss</u> : Applying a new loss function to estimate the prediction in a logistic regression model
-* <u>Wrap up all functions into a python class and use it !</u> : Test our updated classes with a simple classifiation problem
-* <u>One versus all</u> : Understand how to use a logistic regression to classify more than 2 classes
-* <u>Model metrics and confusion matrix</u> : Understand accuracy, precision, recall and f1 score to evaluate our model.
+* **Sigmoid function** : What it is and why use it in classification problems for prediction
+* **Cross entropy loss** : Applying a new loss function to estimate the prediction in a logistic regression model
+* **Wrap up all functions into a python class and use it !** : Test our updated classes with a simple classifiation problem
+* **One versus all** : Understand how to use a logistic regression to classify more than 2 classes
+* **Model metrics and confusion matrix** : Understand accuracy, precision, recall and f1 score to evaluate our model.
 
 ## Module 04 : Regularization
 
 This final module is about regularization. We can use regularization to handle the problem of overfitting. This module simply review all previous work on linear and logistic regression and add the possibility to apply a penalty on the loss function to **regularize** the final weights.
 
-* <u>Adapt linear and logistic regression</u> : Adapt loss functions and gradient descent to take a **L2** penalty in account
-* <u>Use regularization in 'real' conditions</u> : the final exercises are about using Ridge regression and regularized logistic regression with specific datasets and to observe the effect of it.
+* **Adapt linear and logistic regression** : Adapt loss functions and gradient descent to take a **L2** penalty in account
+* **Use regularization in 'real' conditions** : the final exercises are about using Ridge regression and regularized logistic regression with specific datasets and to observe the effect of it.
 
 ## Quick notes
 
