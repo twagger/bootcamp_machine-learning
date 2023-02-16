@@ -57,7 +57,7 @@ This final module is about regularization. We can use regularization to handle t
 * **Adapt linear and logistic regression** : Adapt loss functions and gradient descent to take a **L2** penalty in account
 * **Use regularization in 'real' conditions** : the final exercises are about using Ridge regression and regularized logistic regression with specific datasets and to observe the effect of it.
 
-## Quick notes
+# Quick notes
 
 This bootcamp is very rich and I really enjoyed learning by doing it. My code is not very clean on the first modules, and I realize that it can be improved a lot even on the final exercises, especially regarding data preparation, data augmentation (sometimes I added unecessary features and I shouldn't have), multiprocessing (the idea is ok but I don't perform it very well) and probably many other things.
 
