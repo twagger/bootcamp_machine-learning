@@ -59,7 +59,7 @@ This final module is about regularization. We can use regularization to handle t
 
 ## Quick notes
 
-This bootcamp is very rich and I really enjoyed learning by doing it. My code is not very clean on the first modules, and I realize that it can be improved a lot even on the final exercises, especially regarding data preparation, data augmentation (sometimes I added unecessary columns and I shouldn't), multiprocessing (the idea is ok but I don't perform it very well) and probably many other things.
+This bootcamp is very rich and I really enjoyed learning by doing it. My code is not very clean on the first modules, and I realize that it can be improved a lot even on the final exercises, especially regarding data preparation, data augmentation (sometimes I added unecessary features and I shouldn't have), multiprocessing (the idea is ok but I don't perform it very well) and probably many other things.
 
 I will try to improve my code on the next projects !
 
